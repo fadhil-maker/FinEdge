@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - FinEdge</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'fe-900': '#0a0e17',
+            'fe-800': '#0f1423',
+            'fe-accent': '#00e5a0',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0a0e17; color: #e2e8f0; font-family: 'Inter', sans-serif; }
+    .glass-card {
+      background: rgba(15, 20, 35, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <nav class="fixed w-full z-50 glass-card border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <a href="{% url 'landing_page' %}" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fe-accent to-[#00d4ff] flex items-center justify-center">
+                <svg class="w-4 h-4 text-fe-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+            </div>
+            <span class="text-xl font-bold tracking-tight">FinEdge</span>
+        </a>
+    </div>
+  </nav>
+
+  <main class="pt-32 pb-24 px-6 max-w-4xl mx-auto">
+    <h1 class="text-4xl md:text-5xl font-black mb-8">Privacy Policy</h1>
+    <p class="text-slate-400 mb-12">Last Updated: October 24, 2023</p>
+
+    <div class="space-y-12 text-slate-300 leading-relaxed">
+      
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-4">1. Our Zero-Knowledge Promise</h2>
+        <p>At FinEdge, we believe that financial inclusion should never come at the cost of personal privacy. We have engineered our platform from the ground up to operate on a "zero-knowledge" principle.</p>
+        <p class="mt-4">When you apply for a loan through one of our Partner Banks, our Edge SDK analyzes your smartphone footprint <strong>entirely on-device</strong>. We do not transmit your raw SMS data, your contact names, or your personal photos to any external server.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-4">2. DPDP Act, 2023 Compliance</h2>
+        <p>We are fully compliant with the Digital Personal Data Protection Act, 2023 (DPDPA). Our architecture ensures:</p>
+        <ul class="list-disc pl-6 mt-4 space-y-2 text-slate-400">
+          <li><strong>Explicit Consent:</strong> No extraction occurs without explicit, granular user consent.</li>
+          <li><strong>Data Minimization:</strong> We extract only 7 highly abstracted behavioral features (e.g., utility payment frequency, device age).</li>
+          <li><strong>Zero Retention:</strong> After the local extraction process completes, the raw data used for analysis is immediately and permanently purged from the local RAM.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-4">3. Data Security & Cryptography</h2>
+        <p>Once the mathematical feature vector is generated on your device, it is cryptographically signed using an HMAC-SHA256 hash. This guarantees that the payload cannot be tampered with in transit. The transmission to our secure Django backend occurs over TLS 1.3 encrypted channels.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-4">4. Anti-Fraud Measures</h2>
+        <p>To protect both users and our partner banks, we generate a one-way anonymous hash of your device to detect "velocity" fraud (e.g., applying for dozens of loans across different banks simultaneously). This hash cannot be reverse-engineered to identify your physical device serial numbers.</p>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-white mb-4">Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy, please contact our Data Protection Officer via the Contact form on our <a href="{% url 'landing_page' %}" class="text-fe-accent hover:underline">homepage</a>.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="border-t border-white/5 py-12 text-center text-slate-500 text-sm">
+    <p>&copy; 2023 FinEdge Technologies. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

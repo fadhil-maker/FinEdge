@@ -1,0 +1,387 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinEdge Platform Admin Dashboard — API Revenue, Tenant Analytics, and Fraud Monitoring." />
+  <title>FinEdge — Platform Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'fe': {
+              900: '#0a0e17', 800: '#0f1423', 700: '#151c30',
+              accent: '#00e5a0', cyan: '#00d4ff', purple: '#8b5cf6',
+              gold: '#f59e0b', red: '#ef4444',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: inherit; color: #e2e8f0; }
+    .glass { background: rgba(15, 20, 35, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
+    .glass-bright { background: rgba(21, 28, 48, 0.8); backdrop-filter: blur(24px); border: 1px solid rgba(0,229,160,0.15); }
+    .bg-mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 20%, rgba(0,229,160,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 60%, rgba(0,212,255,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 50% 90%, rgba(139,92,246,0.04) 0%, transparent 60%);
+    }
+    @keyframes fadeIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out both; }
+    .fade-in-d1 { animation-delay: 0.1s; }
+    .fade-in-d2 { animation-delay: 0.2s; }
+    .fade-in-d3 { animation-delay: 0.3s; }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.3); } 50% { box-shadow: 0 0 20px rgba(239,68,68,0.6); } }
+    .alert-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    table { border-collapse: separate; border-spacing: 0; }
+    tbody tr { transition: background 0.15s ease; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="bg-mesh"></div>
+
+  <div class="relative z-10 min-h-screen">
+    <!-- ── Header ──────────────────────────────────────────────── -->
+    <header class="glass border-b border-slate-200 dark:border-white/5 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button id="themeToggle" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20 transition"><svg id="themeIconDark" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><svg id="themeIconLight" class="w-4 h-4 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-fe-accent to-fe-cyan flex items-center justify-center">
+            <svg class="w-5 h-5 text-fe-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight">FinEdge</h1>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-widest uppercase">Platform Admin</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="themeToggle" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20 transition"><svg id="themeIconDark" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><svg id="themeIconLight" class="w-4 h-4 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
+          <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">UTC {{ now|default:"—" }}</span>
+          <div class="w-2 h-2 rounded-full bg-fe-accent animate-pulse"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- VELOCITY LOCK ALERTS                                  -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      {% if velocity_alerts %}
+      <div class="fade-in space-y-3">
+        {% for alert in velocity_alerts %}
+        <div class="alert-glow rounded-2xl border border-red-500/30 bg-red-500/5 p-4 flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-sm font-bold text-red-400">🚨 Velocity Lock — Fraud Alert</h3>
+            <p class="text-xs text-red-300/80 mt-1">
+              Device <code class="bg-red-500/10 px-1.5 py-0.5 rounded font-mono text-[11px]">{{ alert.device_hash }}</code>
+              triggered <strong>{{ alert.request_count }} requests</strong> in {{ alert.window_hours }}h
+              (threshold: {{ alert.threshold }}) — Tenant: <strong>{{ alert.bank_name }}</strong> [{{ alert.tenant_code }}]
+            </p>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full
+                {% if alert.severity == 'critical' %}bg-red-500/20 text-red-400{% else %}bg-amber-500/20 text-amber-400{% endif %}">
+                {{ alert.severity }}
+              </span>
+              <span class="text-[10px] text-slate-600">Recommended: Block device_hash_mask &amp; investigate</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- KPI METRIC CARDS                                      -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total API Revenue -->
+        <div class="glass-bright rounded-2xl p-5 fade-in">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-fe-accent/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-fe-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Total API Revenue</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white">₹{{ total_revenue|floatformat:2 }}</p>
+          <p class="text-[10px] text-slate-600 mt-1">Cumulative BillingLedger</p>
+        </div>
+
+        <!-- Total Applications -->
+        <div class="glass rounded-2xl p-5 fade-in fade-in-d1">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-fe-cyan/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-fe-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+            </div>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Applications</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white">{{ total_applications }}</p>
+          <p class="text-[10px] text-slate-600 mt-1">All tenants combined</p>
+        </div>
+
+        <!-- Active Tenants -->
+        <div class="glass rounded-2xl p-5 fade-in fade-in-d2">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-fe-purple/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-fe-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008V7.5z" /></svg>
+            </div>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Active Tenants</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white">{{ total_tenants }}</p>
+          <p class="text-[10px] text-slate-600 mt-1">Partner banks / NBFCs</p>
+        </div>
+
+        <!-- Avg TrustScore -->
+        <div class="glass rounded-2xl p-5 fade-in fade-in-d3">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-fe-gold/10 flex items-center justify-center">
+              <svg class="w-4 h-4 text-fe-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+            </div>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Avg TrustScore</span>
+          </div>
+          <p class="text-2xl font-black text-slate-900 dark:text-white">{{ avg_trust_score }}</p>
+          <p class="text-[10px] text-slate-600 mt-1">Across all scored applications</p>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- SCORE DISTRIBUTION                                    -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div class="glass rounded-2xl p-5 fade-in">
+        <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-4">Score Distribution</h2>
+        <div class="space-y-3">
+          {% for band in score_bands %}
+          <div class="flex items-center gap-3">
+          <button id="themeToggle" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20 transition"><svg id="themeIconDark" class="w-4 h-4 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><svg id="themeIconLight" class="w-4 h-4 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
+            <span class="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 w-40 shrink-0">{{ band.label }}</span>
+            <div class="flex-1 h-6 bg-white dark:bg-white/5 rounded-lg overflow-hidden relative">
+              <div class="h-full rounded-lg transition-all duration-700
+                {% if band.color == 'red' %}bg-gradient-to-r from-red-500/80 to-red-400/60
+                {% elif band.color == 'amber' %}bg-gradient-to-r from-amber-500/80 to-amber-400/60
+                {% elif band.color == 'cyan' %}bg-gradient-to-r from-cyan-500/80 to-cyan-400/60
+                {% elif band.color == 'emerald' %}bg-gradient-to-r from-emerald-500/80 to-emerald-400/60
+                {% endif %}"
+                style="width: {{ band.pct }}%;">
+              </div>
+              <span class="absolute inset-y-0 right-2 flex items-center text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-mono">{{ band.count }}</span>
+            </div>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono w-12 text-right">{{ band.pct }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TENANT VOLUME TABLE                                   -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div class="glass rounded-2xl overflow-hidden fade-in">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-white/5">
+          <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-widest">API Volume by Tenant</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-white/5">
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Bank</th>
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Tenant Code</th>
+                <th class="text-right text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Sessions</th>
+                <th class="text-right text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Applications</th>
+                <th class="text-right text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Revenue (₹)</th>
+                <th class="text-center text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tenant in tenant_volumes %}
+              <tr class="border-b border-white/[0.03]">
+                <td class="px-5 py-3 text-sm text-slate-900 dark:text-white font-medium">{{ tenant.name }}</td>
+                <td class="px-5 py-3">
+                  <code class="text-[11px] text-fe-cyan bg-fe-cyan/5 px-2 py-0.5 rounded font-mono">{{ tenant.tenant_code }}</code>
+                </td>
+                <td class="px-5 py-3 text-sm text-slate-700 dark:text-slate-300 text-right font-mono">{{ tenant.session_count|default:"0" }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700 dark:text-slate-300 text-right font-mono">{{ tenant.app_count|default:"0" }}</td>
+                <td class="px-5 py-3 text-sm text-fe-accent text-right font-bold font-mono">₹{{ tenant.revenue|default:"0.00"|floatformat:2 }}</td>
+                <td class="px-5 py-3 text-center">
+                  <a href="{% url 'officer_dashboard' tenant.tenant_code %}"
+                     class="text-[10px] text-fe-cyan/70 hover:text-fe-cyan font-semibold uppercase tracking-wider transition-colors">
+                    View →
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-600">No active tenants found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════════════════ -->
+      <!-- RECENT APPLICATIONS (Zero Knowledge)                                 -->
+      <!-- ══════════════════════════════════════════════════════════════════════ -->
+      <div class="glass rounded-2xl overflow-hidden fade-in relative">
+        <div class="absolute top-0 right-0 bg-fe-accent text-fe-900 font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-bl-xl">
+          ZERO-KNOWLEDGE VIEW
+        </div>
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-white/5 flex justify-between items-center">
+          <div>
+            <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-widest">Global Application Stream</h2>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">No personally identifiable information (PII) is stored or visible here.</p>
+          </div>
+          <div>
+            <select id="tenantFilter" class="bg-[#050810] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-[11px] rounded px-3 py-1.5 focus:outline-none focus:border-fe-accent">
+              <option value="all">Filter by Bank: All</option>
+              {% for t in tenant_volumes %}
+                <option value="{{ t.tenant_code }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full" id="applicationsTable">
+            <thead>
+              <tr class="border-b border-slate-200 dark:border-white/5">
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Anonymous Ref</th>
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Tenant Code</th>
+                <th class="text-center text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Vector Score</th>
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Step</th>
+                <th class="text-left text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold px-5 py-3">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in recent_applications %}
+              <tr class="border-b border-white/[0.03] app-row" data-tenant="{{ app.bank.tenant_code }}">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <code class="text-[11px] text-slate-700 dark:text-slate-300 font-mono">{{ app.tracking_reference|truncatechars:30 }}</code>
+                  </div>
+                </td>
+                <td class="px-5 py-3">
+                  <code class="text-[11px] text-fe-purple bg-fe-purple/5 px-2 py-0.5 rounded font-mono">{{ app.bank.tenant_code }}</code>
+                </td>
+                <td class="px-5 py-3 text-center">
+                  {% if app.trust_score %}
+                    <span class="text-sm font-bold font-mono
+                      {% if app.trust_score.calculated_score >= 750 %}text-fe-accent
+                      {% elif app.trust_score.calculated_score >= 650 %}text-fe-cyan
+                      {% elif app.trust_score.calculated_score >= 500 %}text-fe-gold
+                      {% else %}text-fe-red{% endif %}">
+                      {{ app.trust_score.calculated_score }}
+                    </span>
+                  {% else %}
+                    <span class="text-xs text-slate-600">—</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400">{{ app.get_current_step_display }}</td>
+                <td class="px-5 py-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">{{ app.created_at|date:"d M Y H:i" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-600">No applications yet</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <script>
+        document.getElementById('tenantFilter').addEventListener('change', function(e) {
+          const filter = e.target.value;
+          const rows = document.querySelectorAll('.app-row');
+          rows.forEach(row => {
+            if (filter === 'all' || row.dataset.tenant === filter) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      </script>
+
+      <!-- Support Inbox -->
+      <div class="mt-8">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 dark:text-slate-400 mb-4 flex items-center gap-2">
+          <svg class="w-4 h-4 text-fe-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          Support Inbox
+        </h2>
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <table class="w-full text-left">
+            <thead class="bg-fe-900/50 border-b border-slate-200 dark:border-white/5 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <tr>
+                <th class="px-5 py-3 font-semibold">Sender</th>
+                <th class="px-5 py-3 font-semibold">Message</th>
+                <th class="px-5 py-3 font-semibold">Status</th>
+                <th class="px-5 py-3 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              {% for msg in contact_messages %}
+              <tr class="hover:bg-white/[0.02] transition-colors group">
+                <td class="px-5 py-3">
+                  <div class="text-[11px] font-bold text-slate-200">{{ msg.first_name }} {{ msg.last_name }}</div>
+                  <div class="text-[10px] text-slate-500 dark:text-slate-400">{{ msg.email }}</div>
+                </td>
+                <td class="px-5 py-3 text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-xs truncate">{{ msg.message }}</td>
+                <td class="px-5 py-3">
+                  {% if msg.is_reviewed %}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Reviewed</span>
+                  {% else %}
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">New</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-[11px] text-slate-500 dark:text-slate-400 font-mono">{{ msg.created_at|date:"d M Y H:i" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="px-5 py-8 text-center text-sm text-slate-600">No messages in inbox</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <footer class="glass border-t border-slate-200 dark:border-white/5 py-4 mt-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+        <p class="text-[10px] text-slate-600">FinEdge Platform Admin · Multi-Tenant Credit Scoring Infrastructure</p>
+      </div>
+    </footer>
+  </div>
+<script>
+  const htmlEl = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle.addEventListener('click', () => {
+    htmlEl.classList.toggle('dark');
+  });
+</script>
+</body>
+</html>
+

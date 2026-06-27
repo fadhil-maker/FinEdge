@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FinEdge — Privacy-Preserving Edge-ML Alternative Credit Scoring for the Next Billion Users.">
+    <title>FinEdge | Edge-ML Credit Scoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'fe-900': '#0a0e17',
+                        'fe-800': '#0f1423',
+                        'fe-accent': '#00e5a0',
+                        'fe-cyan': '#00d4ff',
+                        'fe-purple': '#8b5cf6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0a0e17; color: #f8fafc; }
+        .glass-nav { background: rgba(10, 14, 23, 0.8); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .glass-card { background: rgba(15, 20, 35, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .gradient-text { background: linear-gradient(135deg, #00e5a0, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .mesh-bg {
+            position: absolute; inset: 0; z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(0, 229, 160, 0.08), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(0, 212, 255, 0.08), transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.08), transparent 50%);
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden selection:bg-fe-accent selection:text-fe-900">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-fe-accent to-fe-cyan flex items-center justify-center">
+                    <svg class="w-5 h-5 text-fe-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight">FinEdge</span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="#banks" class="hover:text-fe-accent transition-colors">Linked Banks</a>
+                <a href="{% url 'api_docs' %}" class="hover:text-fe-accent transition-colors">API Docs</a>
+                <a href="#contact" class="hover:text-fe-accent transition-colors">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-40 pb-20 lg:pt-48 lg:pb-32 px-6">
+        <div class="mesh-bg"></div>
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-fe-accent/10 border border-fe-accent/20 text-fe-accent text-xs font-semibold uppercase tracking-wider mb-8">
+                <span class="w-2 h-2 rounded-full bg-fe-accent animate-pulse"></span>
+                Empowering the Next Billion Users
+            </div>
+            <h1 class="text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight mb-6">
+                Fair Credit Access<br>
+                <span class="gradient-text">For Everyone.</span>
+            </h1>
+            <p class="text-lg text-slate-400 mb-10 leading-relaxed max-w-2xl mx-auto">
+                FinEdge partners with top financial institutions to provide instant credit access based on your smartphone footprint, with absolute privacy guarantees. Your data never leaves your device.
+            </p>
+            <a href="#contact" class="inline-block px-10 py-5 rounded-xl font-bold bg-gradient-to-r from-fe-accent to-fe-cyan text-fe-900 hover:scale-105 transition-transform shadow-[0_0_30px_rgba(0,229,160,0.3)]">
+                Get in Touch
+            </a>
+        </div>
+    </section>
+
+    <!-- Linked Banks & Interest Rates -->
+    <section id="banks" class="py-24 bg-fe-800/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl lg:text-5xl font-bold mb-4">Our Partner Banks</h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">We've integrated with leading banks to offer you the best pre-approved loan rates instantly.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div onclick="openMap('NexusBank', 'NexusBank branches near me')" class="glass-card p-8 rounded-2xl text-center hover:-translate-y-2 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-black mb-2">NexusBank</h3>
+                    <p class="text-slate-400 text-sm mb-6">Instant personal loans up to ₹5 Lakhs.</p>
+                    <div class="bg-blue-500/10 rounded-lg py-3">
+                        <span class="text-xs text-blue-300 uppercase tracking-widest font-bold">Starting at</span>
+                        <div class="text-2xl font-black text-blue-400">10.5% p.a.</div>
+                    </div>
+                </div>
+                
+                <div onclick="openMap('FedMobile', 'FedMobile branches near me')" class="glass-card p-8 rounded-2xl text-center hover:-translate-y-2 transition-transform relative overflow-hidden cursor-pointer">
+                    <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-fe-accent to-fe-cyan"></div>
+                    <div class="w-16 h-16 rounded-2xl bg-fe-accent/10 flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-fe-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-black mb-2">FedMobile</h3>
+                    <p class="text-slate-400 text-sm mb-6">Zero processing fee for FinEdge users.</p>
+                    <div class="bg-fe-accent/10 rounded-lg py-3">
+                        <span class="text-xs text-fe-accent uppercase tracking-widest font-bold">Starting at</span>
+                        <div class="text-2xl font-black text-fe-accent">11.2% p.a.</div>
+                    </div>
+                </div>
+
+                <div onclick="openMap('Aura Capital', 'Aura Capital branches near me')" class="glass-card p-8 rounded-2xl text-center hover:-translate-y-2 transition-transform cursor-pointer">
+                    <div class="w-16 h-16 rounded-2xl bg-fe-purple/10 flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-8 h-8 text-fe-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-black mb-2">Aura Capital</h3>
+                    <p class="text-slate-400 text-sm mb-6">Micro-credit lines for everyday needs.</p>
+                    <div class="bg-fe-purple/10 rounded-lg py-3">
+                        <span class="text-xs text-fe-purple uppercase tracking-widest font-bold">Starting at</span>
+                        <div class="text-2xl font-black text-fe-purple">12.0% p.a.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us -->
+    <section id="contact" class="py-24 relative overflow-hidden">
+        <div class="max-w-3xl mx-auto px-6 relative z-10">
+            <div class="glass-card p-10 rounded-3xl">
+                <h2 class="text-3xl font-black mb-4 text-center">Get in Touch</h2>
+                <p class="text-slate-400 text-center mb-8">Have questions about our banking partners or your data privacy? Send us a message.</p>
+                <form id="contactForm" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">First Name</label>
+                            <input type="text" id="contactFirstName" required class="w-full bg-[#050810] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fe-accent transition-colors" placeholder="John">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">Last Name</label>
+                            <input type="text" id="contactLastName" required class="w-full bg-[#050810] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fe-accent transition-colors" placeholder="Doe">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">Email Address</label>
+                        <input type="email" id="contactEmail" required class="w-full bg-[#050810] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fe-accent transition-colors" placeholder="john@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest text-slate-500 font-bold mb-2">Message</label>
+                        <textarea id="contactMessage" required rows="4" class="w-full bg-[#050810] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-fe-accent transition-colors" placeholder="How can we help you?"></textarea>
+                    </div>
+                    <button type="submit" id="contactSubmitBtn" class="w-full py-4 rounded-xl font-bold bg-white text-fe-900 hover:bg-slate-200 transition-colors">
+                        Send Message
+                    </button>
+                    <div id="contactSuccess" class="hidden text-center text-fe-accent font-bold mt-4">
+                        ✓ Message sent successfully. Our team will review it shortly.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12 text-center text-slate-500 text-sm">
+        <p class="mb-4">&copy; 2023 FinEdge Technologies. All rights reserved.</p>
+        <a href="{% url 'privacy_policy' %}" class="hover:text-fe-accent transition-colors underline underline-offset-4">Privacy Policy</a>
+    </footer>
+
+    <!-- Map Modal -->
+    <div id="mapModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-white/10 transform scale-95 transition-transform duration-300" id="mapModalContent">
+            <div class="flex justify-between items-center p-6 border-b border-white/5">
+                <div>
+                    <h3 id="mapModalTitle" class="text-2xl font-black text-white">Bank Branches</h3>
+                    <p class="text-sm text-slate-400">Find a branch near you.</p>
+                </div>
+                <button id="closeMapBtn" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="bg-[#050810] h-[500px] w-full">
+                <!-- Google Maps iframe for generic locations -->
+                <iframe id="mapIframe" class="w-full h-full border-0" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        // Contact Form Logic
+        const contactForm = document.getElementById('contactForm');
+        const submitBtn = document.getElementById('contactSubmitBtn');
+        const successMsg = document.getElementById('contactSuccess');
+
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const first_name = document.getElementById('contactFirstName').value;
+            const last_name = document.getElementById('contactLastName').value;
+            const email = document.getElementById('contactEmail').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Sending...";
+            
+            try {
+                const response = await fetch('/api/contact/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ first_name, last_name, email, message })
+                });
+                
+                if (response.ok) {
+                    contactForm.reset();
+                    submitBtn.style.display = 'none';
+                    successMsg.classList.remove('hidden');
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Error - Try Again";
+                }
+            } catch (err) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Network Error - Try Again";
+            }
+        });
+
+        // Map Modal Logic
+        const mapModal = document.getElementById('mapModal');
+        const mapModalContent = document.getElementById('mapModalContent');
+        const closeMapBtn = document.getElementById('closeMapBtn');
+        const mapIframe = document.getElementById('mapIframe');
+        const mapModalTitle = document.getElementById('mapModalTitle');
+
+        function openMap(bankName, searchQuery) {
+            mapModalTitle.textContent = bankName + " Branches";
+            // Uses a free maps embed URL that works without an API key
+            const encodedQuery = encodeURIComponent(searchQuery);
+            mapIframe.src = `https://maps.google.com/maps?q=${encodedQuery}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+            
+            mapModal.classList.remove('hidden');
+            setTimeout(() => {
+                mapModal.classList.remove('opacity-0');
+                mapModalContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        closeMapBtn.addEventListener('click', () => {
+            mapModal.classList.add('opacity-0');
+            mapModalContent.classList.add('scale-95');
+            setTimeout(() => {
+                mapModal.classList.add('hidden');
+                mapIframe.src = "";
+            }, 300);
+        });
+    </script>
+
+    <!-- Developer & Demo Portals -->
+    <section class="py-12 bg-[#080d1a] border-t border-white/5" id="demo-portals">
+        <div class="max-w-7xl mx-auto px-6">
+            <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest mb-6">Demo Portals (Internal Only)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{% url 'admin_dashboard' %}" class="block p-4 rounded-xl border border-fe-purple/20 bg-fe-purple/5 hover:bg-fe-purple/10 transition group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-fe-purple">FinEdge Admin</span>
+                        <svg class="w-4 h-4 text-fe-purple/50 group-hover:text-fe-purple group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                    </div>
+                    <p class="text-xs text-slate-400">View global pipeline and aggregate revenue across all tenant banks.</p>
+                </a>
+                
+                {% for bank in banks %}
+                <a href="{% url 'officer_dashboard' bank.tenant_code %}" class="block p-4 rounded-xl border border-fe-cyan/20 bg-fe-cyan/5 hover:bg-fe-cyan/10 transition group">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-fe-cyan">{{ bank.name }} Officer</span>
+                        <svg class="w-4 h-4 text-fe-cyan/50 group-hover:text-fe-cyan group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                    </div>
+                    <p class="text-xs text-slate-400">View isolated application queue for tenant: <code class="bg-black/30 px-1 rounded">{{ bank.tenant_code }}</code>.</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-12 bg-[#050810]">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded bg-gradient-to-br from-fe-accent to-fe-cyan flex items-center justify-center">
+                    <svg class="w-3 h-3 text-fe-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                </div>
+                <span class="font-bold text-white tracking-tight">FinEdge</span>
+            </div>
+            <p class="text-sm text-slate-500">© 2026 FinEdge Platform. All rights reserved.</p>
+            <div class="flex gap-4 text-sm text-slate-500">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinEdge Officer Dashboard — Tenant-Scoped Loan Applications &amp; TrustScore Analytics for {{ bank.name }}." />
+  <title>FinEdge — {{ bank.name }} Officer Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'fe': {
+              900: '#0a0e17', 800: '#0f1423', 700: '#151c30',
+              accent: '#00e5a0', cyan: '#00d4ff', purple: '#8b5cf6',
+              gold: '#f59e0b', red: '#ef4444',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Consolas', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; background: #0a0e17; color: #e2e8f0; }
+    .glass { background: rgba(15,20,35,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.06); }
+    .glass-bright { background: rgba(21,28,48,0.8); backdrop-filter: blur(24px); border: 1px solid rgba(0,229,160,0.15); }
+    .bg-mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 20%, rgba(0,229,160,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 60%, rgba(0,212,255,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 50% at 50% 90%, rgba(139,92,246,0.04) 0%, transparent 60%);
+    }
+    @keyframes fadeIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out both; }
+    .fade-in-d1 { animation-delay: 0.1s; }
+    .fade-in-d2 { animation-delay: 0.2s; }
+    .fade-in-d3 { animation-delay: 0.3s; }
+    table { border-collapse: separate; border-spacing: 0; }
+    tbody tr { transition: background 0.15s ease; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    details summary { cursor: pointer; list-style: none; }
+    details summary::-webkit-details-marker { display: none; }
+    details[open] .chevron { transform: rotate(180deg); }
+    .chevron { transition: transform 0.2s ease; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="bg-mesh"></div>
+
+  <div class="relative z-10 min-h-screen">
+    <!-- ── Header ──────────────────────────────────────────────── -->
+    <header class="glass border-b border-white/5 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-fe-purple to-fe-cyan flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 0h.008v.008h-.008V7.5z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-sm font-bold text-white tracking-tight">{{ bank.name }}</h1>
+            <p class="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Officer Dashboard · {{ bank.tenant_code }}</p>
+          </div>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="text-[10px] text-slate-500 hover:text-fe-cyan font-semibold uppercase tracking-wider transition-colors">
+          ← Admin Panel
+        </a>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- TENANT KPI CARDS                                      -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="glass-bright rounded-2xl p-4 fade-in">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Applications</span>
+          <p class="text-2xl font-black text-white mt-1">{{ stats.total_apps }}</p>
+        </div>
+        <div class="glass rounded-2xl p-4 fade-in fade-in-d1">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Avg Score</span>
+          <p class="text-2xl font-black mt-1
+            {% if stats.avg_score >= 750 %}text-fe-accent
+            {% elif stats.avg_score >= 650 %}text-fe-cyan
+            {% elif stats.avg_score >= 500 %}text-fe-gold
+            {% else %}text-fe-red{% endif %}">{{ stats.avg_score }}</p>
+        </div>
+        <div class="glass rounded-2xl p-4 fade-in fade-in-d1">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Scored</span>
+          <p class="text-2xl font-black text-fe-accent mt-1">{{ stats.approval_count }}</p>
+        </div>
+        <div class="glass rounded-2xl p-4 fade-in fade-in-d2">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Fallback/Thin</span>
+          <p class="text-2xl font-black text-fe-gold mt-1">{{ stats.fallback_count }}</p>
+          <span class="text-[10px] text-slate-600">{{ stats.thin_file_count }} thin files</span>
+        </div>
+        <div class="glass rounded-2xl p-4 fade-in fade-in-d3">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">API Spend</span>
+          <p class="text-2xl font-black text-fe-purple mt-1">₹{{ stats.tenant_revenue|floatformat:2 }}</p>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════ -->
+      <!-- LOAN APPLICATIONS TABLE                               -->
+      <!-- ══════════════════════════════════════════════════════ -->
+      <div class="glass rounded-2xl overflow-hidden fade-in">
+        <div class="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-widest">Loan Applications</h2>
+          <span class="text-[10px] text-slate-600 font-mono">Tenant-scoped: {{ bank.tenant_code }}</span>
+        </div>
+
+        {% for app in applications %}
+        <details class="border-b border-white/[0.03] group">
+          <summary class="px-5 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
+            <!-- Tracking Ref -->
+            <div class="flex-1 min-w-0">
+              <code class="text-[11px] text-slate-300 font-mono block truncate">{{ app.tracking_reference }}</code>
+              <span class="text-[10px] text-slate-600 mt-0.5 block">{{ app.created_at|date:"d M Y, H:i" }} UTC</span>
+            </div>
+
+            <!-- API Fee Indicator -->
+            <div class="hidden md:flex shrink-0">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-fe-purple/10 text-fe-purple border border-fe-purple/20">
+                -₹10 API Fee
+              </span>
+            </div>
+
+            <!-- TrustScore -->
+            <div class="text-center w-16 shrink-0">
+              {% if app.trust_score %}
+                <span class="text-lg font-black font-mono
+                  {% if app.trust_score >= 750 %}text-fe-accent
+                  {% elif app.trust_score >= 650 %}text-fe-cyan
+                  {% elif app.trust_score >= 500 %}text-fe-gold
+                  {% else %}text-fe-red{% endif %}">
+                  {{ app.trust_score }}
+                </span>
+              {% else %}
+                <span class="text-xs text-slate-600">—</span>
+              {% endif %}
+            </div>
+
+            <!-- Decision Badge -->
+            <div class="shrink-0">
+              {% if app.decision_badge %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                {{ app.decision_badge.bg }} {{ app.decision_badge.text }} border {{ app.decision_badge.border }}">
+                <span>{{ app.decision_badge.icon }}</span>
+                {{ app.decision_badge.label }}
+              </span>
+              {% else %}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider
+                bg-slate-500/10 text-slate-500 border border-slate-500/20">
+                Processing
+              </span>
+              {% endif %}
+            </div>
+
+            <!-- Chevron -->
+            <svg class="w-4 h-4 text-slate-600 shrink-0 chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </summary>
+
+          <!-- Expanded Detail Panel -->
+          <div class="px-5 pb-5 space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+              <!-- Application Details & Waterfall -->
+              <div class="bg-fe-900/60 rounded-xl p-4 border border-white/5 space-y-4">
+                <h3 class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-3">Application Workflow</h3>
+                
+                <div class="flex items-center justify-between bg-white/[0.02] p-3 rounded-lg border border-white/5">
+                  <span class="text-xs text-slate-400">Requested Amount</span>
+                  <span class="text-sm text-white font-bold font-mono">₹{{ app.requested_amount }}</span>
+                </div>
+
+                <!-- Step 1: CIBIL -->
+                <div class="bg-white/[0.02] p-3 rounded-lg border border-white/5 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs">1</div>
+                    <span class="text-xs text-white font-semibold">CIBIL Check</span>
+                  </div>
+                  {% if app.cibil_score == -1 %}
+                    <span class="text-[10px] font-bold text-fe-red bg-fe-red/10 px-2 py-1 rounded">New to Credit (-1)</span>
+                  {% else %}
+                    <span class="text-[10px] font-bold text-white">{{ app.cibil_score }}</span>
+                  {% endif %}
+                </div>
+
+                <!-- Step 2: FinEdge TrustScore -->
+                <div class="bg-white/[0.02] p-3 rounded-lg border border-white/5">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                      <div class="w-6 h-6 rounded-full bg-fe-cyan/20 text-fe-cyan flex items-center justify-center text-xs font-bold">2</div>
+                      <span class="text-xs text-fe-cyan font-semibold">FinEdge TrustScore</span>
+                    </div>
+                    {% if app.trust_score %}
+                      <span class="text-lg font-black font-mono text-fe-cyan">{{ app.trust_score }}</span>
+                    {% else %}
+                      <span class="text-[10px] font-bold text-slate-500 uppercase">Pending</span>
+                    {% endif %}
+                  </div>
+                  
+                  {% if not app.trust_score %}
+                  <div class="mt-3">
+                    <button onclick="triggerTrustScore('{{ app.id }}')" class="w-full py-2 bg-fe-cyan text-fe-950 text-xs font-bold rounded hover:bg-fe-cyan/80 transition">
+                      Run FinEdge Score (₹10 API Hit)
+                    </button>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <!-- Step 3: Account Aggregator -->
+                <div class="bg-white/[0.02] p-3 rounded-lg border border-white/5 flex items-center justify-between opacity-50">
+                  <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs">3</div>
+                    <span class="text-xs text-white font-semibold">Account Aggregator</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-slate-500 uppercase">
+                    {% if app.aa_status %}{{ app.aa_status }}{% else %}Not Initiated{% endif %}
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- Feature Vector & XAI (If Scored) -->
+              <div class="space-y-4">
+                {% if app.mathematical_vector %}
+                <div class="bg-fe-900/60 rounded-xl p-4 border border-white/5">
+                  <h3 class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-3">Mathematical Vector</h3>
+                  <div class="space-y-2 h-32 overflow-y-auto pr-2 custom-scrollbar">
+                    {% for key, value in app.mathematical_vector.items %}
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] text-slate-400 font-mono">{{ key }}</span>
+                      <span class="text-[10px] text-white font-mono font-semibold">{{ value }}</span>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  {% if app.trust_score %}
+                  <div class="mt-3 pt-3 border-t border-white/5 space-y-1">
+                    {% if app.default_probability != None %}
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] text-slate-500">Default Probability</span>
+                      <span class="text-[11px] text-fe-gold font-mono font-bold">
+                        {{ app.default_probability|floatformat:4 }}
+                      </span>
+                    </div>
+                    {% endif %}
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] text-slate-500">Model Version</span>
+                      <span class="text-[11px] text-slate-400 font-mono">{{ app.model_version|default:"—" }}</span>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if app.trust_score %}
+                <!-- Explainable AI Reasons -->
+                <div class="bg-fe-900/60 rounded-xl p-4 border border-white/5">
+                  <h3 class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-3">
+                    🧠 Explainable AI
+                  </h3>
+                  {% if app.xai_reasons %}
+                  <div class="space-y-2">
+                    {% for reason in app.xai_reasons %}
+                    <div class="flex items-start gap-2 p-2 rounded-lg
+                      {% if reason.impact == 'positive' %}bg-emerald-500/5 border border-emerald-500/10
+                      {% elif reason.impact == 'negative' %}bg-red-500/5 border border-red-500/10
+                      {% else %}bg-slate-500/5 border border-slate-500/10{% endif %}">
+                      <span class="text-sm shrink-0 mt-0.5">{{ reason.icon }}</span>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[10px] leading-relaxed
+                          {% if reason.impact == 'positive' %}text-emerald-300
+                          {% elif reason.impact == 'negative' %}text-red-300
+                          {% else %}text-slate-300{% endif %}">
+                          {{ reason.reason }}
+                        </p>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </details>
+        {% empty %}
+        <div class="px-5 py-12 text-center">
+          <svg class="w-12 h-12 text-slate-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          <p class="text-sm text-slate-600">No loan applications for this tenant yet</p>
+          <p class="text-[10px] text-slate-700 mt-1">Applications will appear here once the Edge SDK submits data</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </main>
+
+    <!-- ── Footer ──────────────────────────────────────────── -->
+    <footer class="glass border-t border-white/5 py-4 mt-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+        <p class="text-[10px] text-slate-600">FinEdge · {{ bank.name }} Officer Portal · Tenant-isolated view</p>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    async function triggerTrustScore(appId) {
+      if (!confirm("Running FinEdge TrustScore incurs a ₹10 API fee. Proceed?")) return;
+      
+      try {
+          const response = await fetch(`/api/v1/trigger_score/${appId}/`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              }
+          });
+          const data = await response.json();
+          if (response.ok) {
+              window.location.reload();
+          } else {
+              alert("Error: " + data.error);
+          }
+      } catch (e) {
+          alert("Network error");
+      }
+    }
+  </script>
+</body>
+</html>

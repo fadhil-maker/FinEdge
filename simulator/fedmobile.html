@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FedMobile App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'nexus-blue': '#1e3a8a',
+            'nexus-light': '#eff6ff',
+            'nexus-accent': '#f59e0b',
+            'finedge': '#00e5a0'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body { background-color: #f3f4f6; font-family: 'Inter', sans-serif; }
+    .mobile-frame {
+      max-width: 400px;
+      margin: 20px auto;
+      background: white;
+      min-height: 800px;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      position: relative;
+      border: 8px solid #111;
+    }
+    .status-bar {
+      height: 44px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .secure-terminal {
+      background: #0a0e17;
+      color: #00e5a0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      border-radius: 12px;
+      overflow-y: auto;
+      height: 150px;
+      border: 1px solid rgba(0,229,160,0.3);
+      padding: 10px;
+      transition: all 0.3s;
+    }
+    .terminal-line { margin-bottom: 4px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DPDP CONSENT MODAL (Kept for SDK requirement)             -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="consentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-full bg-nexus-light flex items-center justify-center">
+          <svg class="w-5 h-5 text-nexus-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Permission Required</h2>
+        </div>
+      </div>
+      <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+        To offer you an instant pre-approved loan, FedMobile needs to securely verify your financial profile on-device using our partner <strong>FinEdge</strong>. Raw data never leaves your phone.
+      </p>
+      <label class="flex items-start gap-3 mb-5 p-2 border border-slate-200 rounded-lg cursor-pointer">
+        <input type="checkbox" id="consentCheckbox" class="mt-0.5" />
+        <span class="text-[10px] text-slate-600">I consent to on-device processing under the DPDP Act.</span>
+      </label>
+      <button id="consentAcceptBtn" disabled class="w-full py-2.5 rounded-xl font-bold bg-nexus-blue text-white disabled:bg-slate-300 transition-colors">
+        Accept & Continue
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- NEXUS BANK MOBILE APP UI                                  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="app" class="mobile-frame opacity-0 transition-opacity flex flex-col">
+    <!-- Status Bar Mock -->
+    <div class="status-bar text-slate-800">
+      <span>9:41</span>
+      <div class="flex gap-1 items-center">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-nexus-blue text-white px-5 py-4 pb-12 rounded-b-3xl">
+      <div class="flex justify-between items-center mb-6">
+        <div class="font-black text-xl tracking-tight">NEXUS<span class="text-nexus-accent">BANK</span></div>
+        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">JD</div>
+      </div>
+      <p class="text-xs text-blue-200">Total Balance</p>
+      <h1 class="text-3xl font-bold">₹1,24,500</h1>
+    </div>
+
+    <!-- Main Content -->
+    <div class="px-5 -mt-6 flex-1 flex flex-col">
+      <!-- Hidden Config for API -->
+      <input type="hidden" id="apiUrlInput" value="/api/v1/score/" />
+
+      <!-- Loan Offer Card (Mini Loan with Slider) -->
+      <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-5 mb-5 relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase">Pre-Approved</div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Instant Mini Loan</h3>
+        <p class="text-xs text-slate-500 mb-4">Select amount up to ₹5,000 for immediate disbursal.</p>
+        
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">Requested Amount</span>
+            <span class="text-lg font-black text-nexus-blue">₹<span id="loanAmountDisplay">2000</span></span>
+          </div>
+          <input type="range" id="loanAmountSlider" min="500" max="5000" step="100" value="2000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-nexus-accent" />
+          <div class="flex justify-between mt-1 text-[9px] text-slate-400 font-bold">
+            <span>₹500</span>
+            <span>₹5,000</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-lg p-3 flex justify-between items-center mb-4 border border-slate-100">
+          <div>
+            <div class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Est. EMI (3 months)</div>
+            <div class="text-sm font-bold text-slate-700">₹<span id="emiDisplay">685</span>/mo</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Interest Rate</div>
+            <div class="text-sm font-bold text-slate-700">14% p.a.</div>
+          </div>
+        </div>
+        
+        <button id="launchBtn" class="w-full py-3 rounded-xl font-bold bg-nexus-accent text-white hover:bg-orange-500 transition-colors shadow-md">
+          Apply Now
+        </button>
+      </div>
+
+      <!-- Secure Processing Status -->
+      <div id="processingSection" class="hidden mb-5">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-4 h-4 text-finedge animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <span class="text-xs font-bold text-slate-700">Secured by FinEdge SDK</span>
+        </div>
+        <!-- The visual proof of security -->
+        <div class="secure-terminal" id="terminalOutput">
+          <!-- Populated by engine.js -->
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="scoreCard" class="hidden bg-nexus-light border border-blue-200 rounded-2xl p-5 mb-5 text-center shadow-inner">
+        <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3" id="resultIconWrapper">
+          <svg id="resultIcon" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-1" id="resultTitle">Loan Approved!</h3>
+        <p class="text-xs text-slate-600 mb-4" id="resultDesc">Based on your digital profile, you are approved.</p>
+        
+        <div class="bg-white rounded-lg p-3 text-left border border-slate-100">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-[10px] text-slate-500 uppercase font-bold">Your TrustScore</span>
+            <span class="text-sm font-black text-nexus-blue" id="scoreValue">---</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-[10px] text-slate-500 uppercase font-bold">Decision Path</span>
+            <span class="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-600" id="decisionLabel">---</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions Mock -->
+      <div class="mt-auto">
+        <h4 class="text-xs font-bold text-slate-800 mb-3">Recent Transactions</h4>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+              <div><p class="text-xs font-bold text-slate-800">Electricity Bill</p><p class="text-[10px] text-slate-400">Today</p></div>
+            </div>
+            <div class="text-xs font-bold text-slate-800">-₹1,240</div>
+          </div>
+          <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></div>
+              <div><p class="text-xs font-bold text-slate-800">Salary Credit</p><p class="text-[10px] text-slate-400">Yesterday</p></div>
+            </div>
+            <div class="text-xs font-bold text-green-600">+₹85,000</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="engine.js"></script>
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const consentModal = $("#consentModal");
+    const consentCheckbox = $("#consentCheckbox");
+    const consentAcceptBtn = $("#consentAcceptBtn");
+    const app = $("#app");
+    
+    const launchBtn = $("#launchBtn");
+    const processingSection = $("#processingSection");
+    const terminalOutput = $("#terminalOutput");
+    const apiUrlInput = $("#apiUrlInput");
+    
+    const scoreCard = $("#scoreCard");
+    const scoreValue = $("#scoreValue");
+    const decisionLabel = $("#decisionLabel");
+    const resultTitle = $("#resultTitle");
+    const resultDesc = $("#resultDesc");
+    const resultIconWrapper = $("#resultIconWrapper");
+
+    // Initialize FinEdge Terminal Logger explicitly for our new box
+    const terminal = new window.FinEdge.TerminalLogger(terminalOutput);
+
+    // Consent
+    consentCheckbox.addEventListener("change", () => {
+      consentAcceptBtn.disabled = !consentCheckbox.checked;
+    });
+    consentAcceptBtn.addEventListener("click", () => {
+      consentModal.classList.add("hidden");
+      app.style.opacity = "1";
+    });
+
+    // Slider Logic
+    const loanAmountSlider = $("#loanAmountSlider");
+    const loanAmountDisplay = $("#loanAmountDisplay");
+    const emiDisplay = $("#emiDisplay");
+    
+    if (loanAmountSlider) {
+      loanAmountSlider.addEventListener("input", (e) => {
+        const amount = parseInt(e.target.value, 10);
+        loanAmountDisplay.textContent = amount;
+        
+        // Simple EMI calc for 3 months at 14% p.a.
+        // P * r * (1+r)^n / ((1+r)^n - 1)
+        const P = amount;
+        const r = (14 / 100) / 12;
+        const n = 3;
+        const emi = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+        emiDisplay.textContent = Math.round(emi);
+      });
+    }
+
+    // Launch
+    launchBtn.addEventListener("click", async () => {
+      launchBtn.classList.add("hidden");
+      scoreCard.classList.add("hidden");
+      processingSection.classList.remove("hidden");
+      terminal.clear();
+      
+      const apiUrl = apiUrlInput.value.trim() || "/api/v1/score/";
+      const requestedAmount = loanAmountSlider ? parseInt(loanAmountSlider.value, 10) : 2000;
+
+      await window.FinEdge.runEdgePipeline(terminal, apiUrl, requestedAmount, {
+        onScoreReceived: (result) => {
+          processingSection.classList.add("hidden");
+          scoreCard.classList.remove("hidden");
+          
+          scoreValue.textContent = "---";
+          decisionLabel.textContent = result.decision || "PENDING";
+          
+          resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-purple-500 shadow-lg shadow-purple-500/30";
+          resultTitle.textContent = "Application Submitted";
+          resultTitle.className = "text-xl font-bold text-purple-600 mb-1";
+          resultDesc.textContent = "Your application is under manual review by a bank officer.";
+          
+          launchBtn.textContent = "Check Again";
+          launchBtn.classList.remove("hidden");
+
+          if (result.application_id) {
+            const pollInterval = setInterval(async () => {
+              try {
+                const baseUrl = apiUrl.split("v1/score/")[0] + "v1/";
+                const statusUrl = baseUrl + `application/${result.application_id}/status/`;
+                const res = await fetch(statusUrl);
+                const data = await res.json();
+                
+                if (data.trust_score) {
+                  clearInterval(pollInterval);
+                  
+                  scoreValue.textContent = data.trust_score;
+                  decisionLabel.textContent = (data.decision && data.decision.label) ? data.decision.label : data.status;
+                  
+                  if (data.trust_score >= 650) {
+                    resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-emerald-500 shadow-lg shadow-emerald-500/30";
+                    resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                    resultTitle.textContent = "Loan Approved!";
+                    resultTitle.className = "text-xl font-bold text-emerald-500 mb-1";
+                    resultDesc.textContent = "Money has been disbursed to your account.";
+                  } else {
+                    resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-yellow-500 shadow-lg shadow-yellow-500/30";
+                    resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                    resultTitle.textContent = "Further Review Required";
+                    resultTitle.className = "text-xl font-bold text-yellow-500 mb-1";
+                    resultDesc.textContent = "Pending Account Aggregator (AA) verification.";
+                  }
+                }
+              } catch (e) {
+                console.error("Polling error", e);
+              }
+            }, 3000);
+          }
+        },
+        onError: (errMessage) => {
+          processingSection.classList.add("hidden");
+          scoreCard.classList.remove("hidden");
+          
+          scoreValue.textContent = "ERR";
+          decisionLabel.textContent = "FAILED";
+          
+          resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-500 shadow-lg shadow-red-500/30";
+          resultTitle.textContent = "Submission Failed";
+          resultTitle.className = "text-xl font-bold text-red-600 mb-1";
+          launchBtn.textContent = "Try Again";
+          launchBtn.classList.remove("hidden");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
+
