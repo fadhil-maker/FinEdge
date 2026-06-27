@@ -217,7 +217,9 @@
                   <div class="mt-3">
                     <button onclick="triggerTrustScore('{{ app.id }}')" class="w-full py-2 bg-fe-cyan text-fe-950 text-xs font-bold rounded hover:bg-fe-cyan/80 transition">
                       Run FinEdge Score (₹10 API Hit)
-                  {% if app.trust_score %}
+                    </button>
+                  </div>
+                  {% else %}
                   <div class="mt-3">
                     <button onclick="printReport('{{ app.tracking_reference }}', '{{ app.trust_score }}', '{{ app.requested_amount }}', '{{ bank.name }}')" class="w-full py-2 bg-fe-purple/20 text-fe-purple hover:bg-fe-purple/30 text-xs font-bold rounded transition flex items-center justify-center gap-2 border border-fe-purple/30">
                       📄 Export Credit Certificate
