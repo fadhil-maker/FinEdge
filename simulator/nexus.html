@@ -61,6 +61,12 @@
     .terminal-line { margin-bottom: 4px; }
     .hidden { display: none !important; }
   </style>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
 </head>
 <body>
 

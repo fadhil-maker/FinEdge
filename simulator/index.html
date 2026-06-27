@@ -25,6 +25,12 @@
             transform: scale(0.95);
         }
     </style>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
 </head>
 <body class="min-h-screen p-6 flex flex-col items-center">
 
