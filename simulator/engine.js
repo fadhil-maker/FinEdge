@@ -232,37 +232,34 @@ async function signPayload(payload) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Generate realistic synthetic SMS messages for the simulator demo. */
-function generateSyntheticSMS(count = 40) {
-  const templates = [
-    // Financial — whitelisted senders
-    { sender: "HDFCBK", body: "Your a/c XX1234 has been debited INR 2,500.00 for UPI txn ref 412356789. Avl Bal: INR 45,230.50" },
-    { sender: "HDFCBK", body: "Dear Customer, your EMI of INR 8,500 has been debited from a/c XX1234. Avl Bal: INR 36,730.50" },
-    { sender: "SBIINB", body: "INR 15,000.00 credited to your a/c XX5678 by NEFT ref SBIN12345. Balance is INR 1,23,450.00" },
-    { sender: "ICICIB", body: "Your a/c XX9012 debited Rs.1,200 for electricity bill payment. Avl Bal Rs.67,890.00" },
-    { sender: "AXISBK", body: "Rs.5,000.00 credited to your Axis Bank a/c XX3456 via UPI ref 987654321. Bal: Rs.89,500.00" },
-    { sender: "KOTAKB", body: "Alert: Your a/c XX7890 debited INR 750.00 for Swiggy order. Avl Bal: INR 34,200.00" },
-    { sender: "PAYTMB", body: "₹350.00 paid to Amazon via Paytm UPI. Txn ref PTM98765. Balance: ₹12,400.00" },
-    { sender: "PHONEPE", body: "You received ₹2,000.00 from Rajesh K via PhonePe UPI transaction ref PP87654" },
-    { sender: "HDFCBK", body: "EMI bounce alert: Your EMI of INR 12,000 for loan XX4567 has failed due to insufficient balance" },
-    { sender: "SBIINB", body: "EMI instalment of Rs.6,500 for Home Loan XX8901 debited. Next EMI due: 05-Jul-2026. Bal: Rs.98,700.00" },
-    { sender: "KSEBBL", body: "KSEB Bill for Consumer No 1234567: INR 1,850.00 due on 15-Jul-2026. Pay online at kseb.in" },
-    { sender: "BSNLMB", body: "Your BSNL broadband bill of Rs.999 has been debited from linked a/c. Thank you." },
-    { sender: "AIRTEL", body: "Airtel Thanks! Your recharge of Rs.599 is successful. Validity: 56 days. Data: 2GB/day" },
-    { sender: "BESCOM", body: "BESCOM electricity bill of INR 2,340 for SC No 4567890 is due on 20-Jul-2026." },
-    { sender: "GPAY", body: "You paid ₹1,500.00 to BigBasket using Google Pay. UPI ref GPY123456789" },
-    { sender: "JIOFIN", body: "Your Jio Financial Services mutual fund SIP of ₹5,000 debited successfully." },
-    { sender: "AXISBK", body: "URGENT: EMI instalment overdue for Loan XX6543. Amount: Rs.9,200. Please pay immediately." },
-    { sender: "FREERC", body: "You received ₹150.00 cashback from Freecharge. Wallet balance: ₹1,250.00" },
-
-    // Spam / non-financial — non-whitelisted senders (should be rejected)
-    { sender: "SPAMCO", body: "WIN A FREE iPHONE! Click here now: bit.ly/scam123" },
-    { sender: "PROMO1", body: "50% OFF on all electronics! Limited time offer. Shop now at example.com" },
-    { sender: "ADVERT", body: "Dear customer, try our new premium credit card with zero annual fee!" },
-    { sender: "MKTNG1", body: "Congratulations! You've been selected for a special cashback offer." },
-    { sender: "RANDOM", body: "Your OTP for login is 847291. Valid for 5 minutes. Do not share." },
-    { sender: "UNKNWN", body: "Hi, I saw your profile on LinkedIn. Let's connect for business opportunities." },
-    { sender: "OFFERS", body: "Flat 30% off on your next order! Use code SAVE30. T&C apply." },
+function generateSyntheticSMS(profile = "average", count = 40) {
+  const good_templates = [
+    { sender: "HDFCBK", body: "INR 85,000.00 credited to your a/c XX5678 by NEFT. Balance is INR 1,23,450.00" },
+    { sender: "SBIINB", body: "Dear Customer, your EMI of INR 8,500 has been debited from a/c XX1234. Avl Bal: INR 1,14,950.00" },
+    { sender: "ICICIB", body: "Your a/c XX9012 debited Rs.1,200 for electricity bill payment. Avl Bal Rs.1,13,750.00" },
+    { sender: "AXISBK", body: "Rs.5,000.00 credited to your Axis Bank a/c XX3456 via UPI. Bal: Rs.1,18,750.00" },
+    { sender: "GPAY", body: "You paid ?1,500.00 to BigBasket using Google Pay. UPI ref GPY123" }
   ];
+
+  const average_templates = [
+    { sender: "SBIINB", body: "INR 25,000.00 credited to your a/c XX5678. Balance is INR 35,450.00" },
+    { sender: "HDFCBK", body: "Dear Customer, your EMI of INR 4,500 has been debited. Avl Bal: INR 30,950.00" },
+    { sender: "AXISBK", body: "EMI bounce alert: Your EMI of INR 4,500 has failed due to insufficient balance" },
+    { sender: "AXISBK", body: "Rs.5,000.00 credited to your Axis Bank a/c XX3456. Bal: Rs.35,950.00" },
+    { sender: "PAYTMB", body: "?350.00 paid to Zomato via Paytm UPI. Balance: ?35,600.00" }
+  ];
+
+  const bad_templates = [
+    { sender: "HDFCBK", body: "EMI bounce alert: Your EMI of INR 2,000 has failed due to insufficient balance" },
+    { sender: "SBIINB", body: "URGENT: EMI instalment overdue for Loan XX6543. Amount: Rs.5,200." },
+    { sender: "ICICIB", body: "Your a/c XX9012 debited Rs.100. Avl Bal Rs.450.00" },
+    { sender: "AXISBK", body: "EMI bounce alert: Your EMI of INR 1,500 has failed due to insufficient balance" },
+    { sender: "PHONEPE", body: "You paid ?50.00 to Tea Stall via PhonePe. Avl Bal: Rs.400.00" }
+  ];
+
+  let templates = average_templates;
+  if (profile === "good") templates = good_templates;
+  if (profile === "bad") templates = bad_templates;
 
   const messages = [];
   const now = Date.now();
@@ -374,7 +371,7 @@ async function runEdgePipeline(terminal, apiUrl, requestedAmount, uiCallbacks = 
     terminal.log("", "info", 100);
 
     terminal.log("═══ PHASE 1: LOCAL DATA ACQUISITION ═══", "system", 400);
-    let rawMessages = generateSyntheticSMS(40);
+    let rawMessages = generateSyntheticSMS(profile, 40);
     terminal.log(`Loaded ${rawMessages.length} SMS messages from device inbox`, "info", 350);
 
     // ── Phase 2: Bloom filter scan ───────────────────────────────────────
