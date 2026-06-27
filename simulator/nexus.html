@@ -484,7 +484,7 @@
     const apiUrl = apiUrlInput.value.trim() || "https://finedge-iy0i.onrender.com/api/v1/score/";
     const requestedAmount = parseInt(loanAmountSlider.value, 10);
 
-    await window.FinEdge.runEdgePipeline(terminal, apiUrl, "finedge_demo_nexus", requestedAmount, "good", {
+    await window.FinEdge.runEdgePipeline(terminal, apiUrl, "VgWTv8f0.wAQoI2ip4sNX1yk9ZaU1Z4UXJkGVjL6N", requestedAmount, "good", {
       onScoreReceived: (result) => {
         processingSection.classList.add("hidden");
         scoreCard.classList.remove("hidden");
