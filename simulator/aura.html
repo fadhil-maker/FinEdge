@@ -116,7 +116,7 @@
     <!-- Main Content -->
     <div class="px-5 -mt-6 flex-1 flex flex-col">
       <!-- Hidden Config for API -->
-      <input type="hidden" id="apiUrlInput" value="/api/v1/score/" />
+      <input type="hidden" id="apiUrlInput" value="https://finedge-iy0i.onrender.com/api/v1/score/" />
 
       <!-- Loan Offer Card (Mini Loan with Slider) -->
       <div class="bg-slate-800 border-slate-700 rounded-2xl shadow-lg border border-slate-100 p-5 mb-5 relative overflow-hidden">
@@ -267,7 +267,7 @@
       processingSection.classList.remove("hidden");
       terminal.clear();
       
-      const apiUrl = apiUrlInput.value.trim() || "/api/v1/score/";
+      const apiUrl = apiUrlInput.value.trim() || "https://finedge-iy0i.onrender.com/api/v1/score/";
       const requestedAmount = loanAmountSlider ? parseInt(loanAmountSlider.value, 10) : 2000;
 
       await window.FinEdge.runEdgePipeline(terminal, apiUrl, requestedAmount, {
@@ -338,5 +338,6 @@
   </script>
 </body>
 </html>
+
 
 
