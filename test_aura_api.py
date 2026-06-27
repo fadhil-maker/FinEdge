@@ -23,12 +23,12 @@ secret = b'finedge_hmac_shared_secret_2026'
 signature = hmac.new(secret, payload.encode('utf-8'), "sha256").hexdigest()
 
 headers = {
-    "Authorization": "Api-Key VgWTv8f0.wAQoI2ip4sNX1yk9ZaU1Z4UXJkGVjL6N",
+    "Authorization": "Api-Key btTYC3BO.pmbjlfcY3po5W8x821SB5MazTIudxwpx",
     "Content-Type": "application/json",
     "X-FinEdge-Signature": signature
 }
 
-print('Sending perfectly formatted payload...')
+print('Sending payload with Aura API key...')
 resp = requests.post("https://finedge-iy0i.onrender.com/api/v1/score/", headers=headers, data=payload)
 print(f"Status Code: {resp.status_code}")
 print(f"Response: {resp.text}")
