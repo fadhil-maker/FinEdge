@@ -469,7 +469,7 @@ async function runEdgePipeline(terminal, apiUrl, requestedAmount, profile, uiCal
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Api-Key DqpYnf78.QPJum6C5BWiWtEJFq66fpN1Ayhul14Cm",
+          "Authorization": "Api-Key finedge_demo_api_key_2026",
           "X-FinEdge-Signature": signature,
         },
         body: payloadJson,
