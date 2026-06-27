@@ -1,235 +1,333 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>FedMobile App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FedMobile">
+  <link rel="manifest" href="manifest-fedmobile.json">
+  <link rel="apple-touch-icon" href="icon-fedmobile-192.png">
+  <title>FedMobile</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            'fed-primary': '#047857',
-            'fed-light': '#ecfdf5',
-            'fed-accent': '#10b981',
+            'bank': '#047857',
+            'bank-dark': '#065f46',
+            'bank-light': '#ecfdf5',
+            'bank-accent': '#10b981',
             'finedge': '#00e5a0'
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
           }
         }
       }
     }
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body { background-color: #f3f4f6; font-family: 'Inter', sans-serif; }
-    .mobile-frame {
-      max-width: 400px;
-      margin: 20px auto;
-      background: white;
-      min-height: 800px;
-      border-radius: 40px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      overflow: hidden;
-      position: relative;
-      border: 8px solid #111;
-    }
-    .status-bar {
-      height: 44px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .secure-terminal {
-      background: #0a0e17;
-      color: #00e5a0;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      border-radius: 12px;
-      overflow-y: auto;
-      height: 150px;
-      border: 1px solid rgba(0,229,160,0.3);
-      padding: 10px;
-      transition: all 0.3s;
-    }
-    .terminal-line { margin-bottom: 4px; }
-    .hidden { display: none !important; }
-  </style>
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js');
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
   </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: #f1f5f9; overflow-x: hidden; }
+    
+    /* Full screen app container */
+    #app { 
+      width: 100vw; height: 100vh; height: 100dvh;
+      display: flex; flex-direction: column; 
+      background: #f1f5f9; overflow: hidden; position: relative;
+    }
+
+    /* Screen system */
+    .screen {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 56px;
+      overflow-y: auto; overflow-x: hidden;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+      will-change: transform, opacity;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active { transform: translateX(0); opacity: 1; z-index: 2; }
+    .screen.left   { transform: translateX(-30%); opacity: 0; z-index: 1; }
+    .screen.right  { transform: translateX(100%); opacity: 1; z-index: 3; }
+    .screen.hidden-screen { transform: translateX(100%); opacity: 0; z-index: 0; }
+
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
+      background: white; border-top: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-around;
+      z-index: 100; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-item { 
+      display: flex; flex-direction: column; align-items: center; gap: 2px; 
+      cursor: pointer; padding: 6px 12px; transition: color 0.2s;
+    }
+    .tab-item svg { width: 22px; height: 22px; }
+    .tab-item span { font-size: 10px; font-weight: 600; }
+    .tab-item.active { color: #1e3a8a; }
+    .tab-item:not(.active) { color: #94a3b8; }
+
+    /* Consent overlay */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .overlay.show { opacity: 1; pointer-events: all; }
+    .overlay .sheet {
+      background: white; border-radius: 24px 24px 0 0; padding: 24px; width: 100%;
+      max-width: 480px; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .overlay.show .sheet { transform: translateY(0); }
+
+    /* Terminal */
+    .secure-terminal {
+      background: #0a0e17; color: #00e5a0;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      border-radius: 12px; overflow-y: auto; height: 140px;
+      border: 1px solid rgba(0,229,160,0.3); padding: 10px;
+    }
+    .terminal-line { margin-bottom: 3px; }
+
+    /* Service grid item */
+    .service-item { 
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; padding: 8px 4px; border-radius: 12px;
+      transition: background 0.15s;
+    }
+    .service-item:active { background: #f1f5f9; }
+
+    /* Card press effect */
+    .pressable { transition: transform 0.1s; }
+    .pressable:active { transform: scale(0.98); }
+  </style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- DPDP CONSENT MODAL (Kept for SDK requirement)             -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <div id="consentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full bg-fed-light flex items-center justify-center">
-          <svg class="w-5 h-5 text-fed-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
-        </div>
+<div id="app">
+
+  <!-- ============================================ -->
+  <!-- SCREEN 1: HOME                               -->
+  <!-- ============================================ -->
+  <div id="screenHome" class="screen active">
+    
+    <!-- Header with balance -->
+    <div class="bg-bank text-white px-5 pt-12 pb-8" style="border-radius: 0 0 28px 28px;">
+      <div class="flex justify-between items-center mb-6">
         <div>
-          <h2 class="text-base font-bold text-slate-800">Permission Required</h2>
+          <p class="text-emerald-200 text-xs font-medium">Welcome back</p>
+          <h1 class="text-lg font-bold">Priya Sharma</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+          </div>
+          <div class="w-9 h-9 bg-bank-accent rounded-full flex items-center justify-center text-sm font-bold text-white">PS</div>
         </div>
       </div>
-      <p class="text-xs text-slate-600 mb-4 leading-relaxed">
-        To offer you an instant pre-approved loan, FedMobile needs to securely verify your financial profile on-device using our partner <strong>FinEdge</strong>. Raw data never leaves your phone.
-      </p>
-      <label class="flex items-start gap-3 mb-5 p-2 border border-slate-200 rounded-lg cursor-pointer">
-        <input type="checkbox" id="consentCheckbox" class="mt-0.5" />
-        <span class="text-[10px] text-slate-600">I consent to on-device processing under the DPDP Act.</span>
-      </label>
-      <button id="consentAcceptBtn" disabled class="w-full py-2.5 rounded-xl font-bold bg-fed-primary text-white disabled:bg-slate-300 transition-colors">
-        Accept & Continue
-      </button>
+      
+      <!-- Balance Card -->
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-4">
+        <p class="text-emerald-200 text-[11px] font-medium mb-1">Total Balance</p>
+        <h2 class="text-2xl font-black tracking-tight">₹1,24,500<span class="text-sm font-medium text-emerald-200">.00</span></h2>
+        <div class="flex gap-3 mt-4">
+          <button class="flex-1 bg-white/20 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" /></svg>
+            Send
+          </button>
+          <button class="flex-1 bg-white/20 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5l-15 15m0 0h11.25m-11.25 0V8.25" /></svg>
+            Receive
+          </button>
+          <button class="flex-1 bg-white/20 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Pay
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services Grid -->
+    <div class="px-5 mt-5">
+      <h3 class="text-sm font-bold text-slate-800 mb-3">Services</h3>
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+        <div class="grid grid-cols-4 gap-3">
+          <div class="service-item" id="goToLoanBtn">
+            <div class="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Mini Loan</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-yellow-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Gold Loan</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Cards</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Transfer</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-purple-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Invest</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Utility</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-indigo-50 flex items-center justify-center">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">Recharge</span>
+          </div>
+          <div class="service-item">
+            <div class="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center">
+              <svg class="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-700">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo Banner -->
+    <div class="px-5 mt-4">
+      <div class="bg-gradient-to-r from-bank to-emerald-700 rounded-2xl p-4 text-white pressable" id="promoBanner">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-[10px] text-emerald-200 font-semibold uppercase tracking-wider">Pre-Approved</p>
+            <h3 class="text-sm font-bold mt-0.5">Instant Mini Loan</h3>
+            <p class="text-[11px] text-emerald-200 mt-1">Get up to ₹5,000 in seconds</p>
+          </div>
+          <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="px-5 mt-5 pb-20">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-bold text-slate-800">Recent Transactions</h3>
+        <span class="text-xs font-semibold text-bank">See All</span>
+      </div>
+      <div class="space-y-2.5">
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 flex justify-between items-center pressable">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center"><svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+            <div><p class="text-sm font-semibold text-slate-800">Electricity Bill</p><p class="text-[11px] text-slate-400">Today, 2:30 PM</p></div>
+          </div>
+          <span class="text-sm font-bold text-slate-800">-₹1,240</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 flex justify-between items-center pressable">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center"><svg class="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg></div>
+            <div><p class="text-sm font-semibold text-slate-800">Salary Credit</p><p class="text-[11px] text-slate-400">Yesterday, 9:00 AM</p></div>
+          </div>
+          <span class="text-sm font-bold text-green-600">+₹85,000</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 flex justify-between items-center pressable">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center"><svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg></div>
+            <div><p class="text-sm font-semibold text-slate-800">Amazon</p><p class="text-[11px] text-slate-400">Jun 25, 6:15 PM</p></div>
+          </div>
+          <span class="text-sm font-bold text-slate-800">-₹2,499</span>
+        </div>
+        <div class="bg-white p-3.5 rounded-xl border border-slate-100 flex justify-between items-center pressable">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg></div>
+            <div><p class="text-sm font-semibold text-slate-800">UPI Transfer</p><p class="text-[11px] text-slate-400">Jun 24, 11:00 AM</p></div>
+          </div>
+          <span class="text-sm font-bold text-slate-800">-₹3,000</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- NEXUS BANK MOBILE APP UI                                  -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <div id="app" class="mobile-frame transition-opacity flex flex-col">
-    <!-- Status Bar Mock -->
-    <div class="status-bar text-slate-800">
-      <span>9:41</span>
-      <div class="flex gap-1 items-center">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+  <!-- ============================================ -->
+  <!-- SCREEN 2: MINI LOAN (FinEdge SDK)            -->
+  <!-- ============================================ -->
+  <div id="screenLoan" class="screen hidden-screen">
+    
+    <!-- Top Bar -->
+    <div class="bg-white px-4 pt-12 pb-3 flex items-center gap-3 border-b border-slate-100 sticky top-0 z-10">
+      <div id="backBtn" class="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer pressable">
+        <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
       </div>
+      <h2 class="text-base font-bold text-slate-800">Instant Mini Loan</h2>
     </div>
 
-    <!-- Header -->
-    <div class="bg-fed-primary text-white px-5 py-4 pb-12 rounded-b-3xl">
-      <div class="flex justify-between items-center mb-6">
-        <div class="font-black text-xl tracking-tight">FED<span class="text-fed-accent">MOBILE</span></div>
-        <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">JD</div>
-      </div>
-      <p class="text-xs text-blue-200">Total Balance</p>
-      <h1 class="text-3xl font-bold">₹1,24,500</h1>
-    </div>
+    <div class="px-5 py-4">
+      <input type="hidden" id="apiUrlInput" value="https://finedge-iy0i.onrender.com/api/v1/score/" />
 
-    <!-- Main Content -->
-    <div class="px-5 -mt-6 flex-1 flex flex-col relative overflow-hidden" id="screenContainer">
-      
-
-      <!-- HOME SCREEN -->
-      <div id="homeScreen" class="w-full flex-1 flex flex-col transition-transform duration-300 transform translate-x-0">
-        
-        <!-- Services Grid -->
-        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-4 mb-5">
-            <h4 class="text-xs font-bold text-slate-800 mb-3">Quick Actions</h4>
-            <div class="grid grid-cols-4 gap-2 text-center">
-                <div id="openLoanScreenBtn" class="flex flex-col items-center gap-1 cursor-pointer">
-                    <div class="w-12 h-12 rounded-full bg-fed-light flex items-center justify-center text-fed-primary">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </div>
-                    <span class="text-[9px] font-bold text-slate-600">Mini Loan</span>
-                </div>
-                <div class="flex flex-col items-center gap-1 opacity-50">
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                    </div>
-                    <span class="text-[9px] font-bold text-slate-600">Gold Loan</span>
-                </div>
-                <div class="flex flex-col items-center gap-1 opacity-50">
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
-                    </div>
-                    <span class="text-[9px] font-bold text-slate-600">Utility</span>
-                </div>
-                <div class="flex flex-col items-center gap-1 opacity-50">
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                    </div>
-                    <span class="text-[9px] font-bold text-slate-600">Transfer</span>
-                </div>
-            </div>
+      <!-- Loan Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-bold text-slate-800">Select Amount</h3>
+          <span class="text-[10px] bg-green-100 text-green-700 font-bold px-2.5 py-1 rounded-full uppercase">Pre-Approved</span>
         </div>
-
+        <div class="text-center mb-4">
+          <span class="text-3xl font-black text-bank">₹<span id="loanAmountDisplay">2000</span></span>
         </div>
-      </div>
+        <input type="range" id="loanAmountSlider" min="500" max="5000" step="100" value="2000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-bank-accent mb-3" />
+        <div class="flex justify-between text-[10px] text-slate-400 font-medium mb-4">
+          <span>₹500</span><span>₹5,000</span>
         </div>
-      </div>
-
-      <!-- LOAN SCREEN -->
-      <div id="loanScreen" class="w-full flex-1 flex flex-col absolute top-0 left-0 transition-transform duration-300 transform translate-x-full bg-[#f8fafc] px-5 pt-1 h-full z-10">
-        
-        <div class="flex items-center gap-3 mb-4 -mx-2 cursor-pointer" id="backToHomeBtn">
-            <svg class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            <span class="text-sm font-bold text-slate-600">Back to Dashboard</span>
-        </div>
-
-      
-
-      <!-- Loan Offer Card (Mini Loan with Slider) -->
-      <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-5 mb-5 relative overflow-hidden">
-        <div class="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg uppercase">Pre-Approved</div>
-        <h3 class="text-lg font-bold text-slate-800 mb-1">Instant Mini Loan</h3>
-        <p class="text-xs text-slate-500 mb-4">Select amount up to ₹5,000 for immediate disbursal.</p>
-        
-        <div class="mb-4">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-[10px] text-slate-500 font-bold uppercase">Requested Amount</span>
-            <span class="text-lg font-black text-fed-primary">₹<span id="loanAmountDisplay">2000</span></span>
-          </div>
-          <input type="range" id="loanAmountSlider" min="500" max="5000" step="100" value="2000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-fed-accent" />
-          <div class="flex justify-between mt-1 text-[9px] text-slate-400 font-bold">
-            <span>₹500</span>
-            <span>₹5,000</span>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 rounded-lg p-3 flex justify-between items-center mb-4 border border-slate-100">
+        <div class="bg-slate-50 rounded-xl p-3 flex justify-between items-center">
           <div>
-            <div class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Est. EMI (3 months)</div>
-            <div class="text-sm font-bold text-slate-700">₹<span id="emiDisplay">685</span>/mo</div>
+            <p class="text-[10px] text-slate-500 font-medium">Monthly EMI (3 months)</p>
+            <p class="text-lg font-bold text-slate-800">₹<span id="emiDisplay">686</span></p>
           </div>
           <div class="text-right">
-            <div class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">Interest Rate</div>
-            <div class="text-sm font-bold text-slate-700">14% p.a.</div>
+            <p class="text-[10px] text-slate-500 font-medium">Interest Rate</p>
+            <p class="text-lg font-bold text-bank">14% p.a.</p>
           </div>
         </div>
-        
-        <button id="launchBtn" class="w-full py-3 rounded-xl font-bold bg-fed-accent text-white hover:bg-orange-500 transition-colors shadow-md">
-          Apply Now
-        </button>
       </div>
 
-      <!-- Secure Processing Status -->
-      <div id="processingSection" class="hidden mb-5">
+      <!-- Apply Button -->
+      <button id="launchBtn" class="w-full py-3.5 rounded-2xl font-bold bg-bank-accent text-white text-sm shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition-transform mb-4">
+        Apply Now
+      </button>
+
+      <!-- Processing Section -->
+      <div id="processingSection" class="hidden mb-4">
         <div class="flex items-center gap-2 mb-2">
-          <svg class="w-4 h-4 text-finedge animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          <svg class="w-4 h-4 text-finedge animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
           <span class="text-xs font-bold text-slate-700">Secured by FinEdge SDK</span>
         </div>
-        <!-- The visual proof of security -->
-        <div class="secure-terminal" id="terminalOutput">
-          <!-- Populated by engine.js -->
-        </div>
+        <div class="secure-terminal" id="terminalOutput"></div>
       </div>
 
       <!-- Result Card -->
-      <div id="scoreCard" class="hidden bg-fed-light border border-blue-200 rounded-2xl p-5 mb-5 text-center shadow-inner">
+      <div id="scoreCard" class="hidden bg-bank-light border border-blue-200 rounded-2xl p-5 mb-4 text-center">
         <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3" id="resultIconWrapper">
           <svg id="resultIcon" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
         </div>
         <h3 class="text-xl font-bold text-slate-800 mb-1" id="resultTitle">Loan Approved!</h3>
         <p class="text-xs text-slate-600 mb-4" id="resultDesc">Based on your digital profile, you are approved.</p>
-        
         <div class="bg-white rounded-lg p-3 text-left border border-slate-100">
           <div class="flex justify-between items-center mb-2">
             <span class="text-[10px] text-slate-500 uppercase font-bold">Your TrustScore</span>
-            <span class="text-sm font-black text-fed-primary" id="scoreValue">---</span>
+            <span class="text-sm font-black text-bank" id="scoreValue">---</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-[10px] text-slate-500 uppercase font-bold">Decision Path</span>
@@ -237,147 +335,203 @@
           </div>
         </div>
       </div>
-
-      </div>
-      </div>
-      </div>
-
     </div>
   </div>
 
-  <script src="engine.js"></script>
-  <script>
-    const $ = (sel) => document.querySelector(sel);
-    const consentModal = $("#consentModal");
-    const consentCheckbox = $("#consentCheckbox");
-    const consentAcceptBtn = $("#consentAcceptBtn");
-    const app = $("#app");
-    
-    const launchBtn = $("#launchBtn");
-    const processingSection = $("#processingSection");
-    const terminalOutput = $("#terminalOutput");
-    const apiUrlInput = $("#apiUrlInput");
-    
-    const scoreCard = $("#scoreCard");
-    const scoreValue = $("#scoreValue");
-    const decisionLabel = $("#decisionLabel");
-    const resultTitle = $("#resultTitle");
-    const resultDesc = $("#resultDesc");
-    const resultIconWrapper = $("#resultIconWrapper");
+  <!-- ============================================ -->
+  <!-- BOTTOM TAB BAR                                -->
+  <!-- ============================================ -->
+  <div class="tab-bar">
+    <div class="tab-item active" id="tabHome">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+      <span>Home</span>
+    </div>
+    <div class="tab-item" id="tabCards">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+      <span>Cards</span>
+    </div>
+    <div class="tab-item" id="tabScan">
+      <div class="w-12 h-12 -mt-5 bg-bank rounded-full flex items-center justify-center shadow-lg shadow-emerald-900/30">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" /></svg>
+      </div>
+      <span class="mt-1">Scan</span>
+    </div>
+    <div class="tab-item" id="tabWealth">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+      <span>Wealth</span>
+    </div>
+    <div class="tab-item" id="tabProfile">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+      <span>Profile</span>
+    </div>
+  </div>
 
-    // Initialize FinEdge Terminal Logger explicitly for our new box
-    const terminal = new window.FinEdge.TerminalLogger(terminalOutput);
+  <!-- ============================================ -->
+  <!-- DPDP CONSENT BOTTOM SHEET                     -->
+  <!-- ============================================ -->
+  <div id="consentOverlay" class="overlay">
+    <div class="sheet">
+      <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto mb-4"></div>
+      <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-full bg-bank-light flex items-center justify-center">
+          <svg class="w-5 h-5 text-bank" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Permission Required</h2>
+          <p class="text-[11px] text-slate-500">FinEdge Privacy Engine</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+        To offer you an instant pre-approved loan, FedMobile needs to securely verify your financial profile on-device using our partner <strong>FinEdge</strong>. Raw data never leaves your phone.
+      </p>
+      <label class="flex items-start gap-3 mb-5 p-3 border border-slate-200 rounded-xl cursor-pointer bg-slate-50">
+        <input type="checkbox" id="consentCheckbox" class="mt-0.5 w-4 h-4 accent-bank" />
+        <span class="text-[11px] text-slate-600 leading-relaxed">I consent to on-device processing under the DPDP Act.</span>
+      </label>
+      <button id="consentAcceptBtn" disabled class="w-full py-3 rounded-2xl font-bold bg-bank text-white disabled:bg-slate-300 transition-all text-sm">
+        Accept & Continue
+      </button>
+    </div>
+  </div>
 
-    // Consent
-    consentCheckbox.addEventListener("change", () => {
-      consentAcceptBtn.disabled = !consentCheckbox.checked;
-    });
-    
-    // Launch button just shows the modal
-    launchBtn.addEventListener("click", () => {
-      consentModal.classList.remove("hidden");
-    });
+</div>
 
-    // Slider Logic
-    const loanAmountSlider = $("#loanAmountSlider");
-    const loanAmountDisplay = $("#loanAmountDisplay");
-    const emiDisplay = $("#emiDisplay");
-    
-    if (loanAmountSlider) {
-      loanAmountSlider.addEventListener("input", (e) => {
-        const amount = parseInt(e.target.value, 10);
-        loanAmountDisplay.textContent = amount;
-        
-        // Simple EMI calc for 3 months at 14% p.a.
-        // P * r * (1+r)^n / ((1+r)^n - 1)
-        const P = amount;
-        const r = (14 / 100) / 12;
-        const n = 3;
-        const emi = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
-        emiDisplay.textContent = Math.round(emi);
-      });
-    }
+<script src="engine.js"></script>
+<script>
+  const $ = (sel) => document.querySelector(sel);
 
-    // Consent Accept button triggers SDK
-    consentAcceptBtn.addEventListener("click", async () => {
-      consentModal.classList.add("hidden");
-      launchBtn.classList.add("hidden");
-      scoreCard.classList.add("hidden");
-      processingSection.classList.remove("hidden");
-      terminal.clear();
-      
-      const apiUrl = apiUrlInput.value.trim() || "https://finedge-iy0i.onrender.com/api/v1/score/";
-      const requestedAmount = loanAmountSlider ? parseInt(loanAmountSlider.value, 10) : 2000;
+  // Screens
+  const screenHome = $("#screenHome");
+  const screenLoan = $("#screenLoan");
 
-      await window.FinEdge.runEdgePipeline(terminal, apiUrl, requestedAmount, {
-        onScoreReceived: (result) => {
-          processingSection.classList.add("hidden");
-          scoreCard.classList.remove("hidden");
-          
-          scoreValue.textContent = "---";
-          decisionLabel.textContent = result.decision || "PENDING";
-          
-          resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-purple-500 shadow-lg shadow-purple-500/30";
-          resultTitle.textContent = "Application Submitted";
-          resultTitle.className = "text-xl font-bold text-purple-600 mb-1";
-          resultDesc.textContent = "Your application is under manual review by a bank officer.";
-          
-          launchBtn.textContent = "Check Again";
-          launchBtn.classList.remove("hidden");
+  function showScreen(target, from) {
+    from.classList.remove("active");
+    from.classList.add("left");
+    target.classList.remove("hidden-screen", "right");
+    target.classList.add("active");
+  }
+  function goBack(target, from) {
+    from.classList.remove("active");
+    from.classList.add("right");
+    target.classList.remove("left");
+    target.classList.add("active");
+  }
 
-          if (result.application_id) {
-            const pollInterval = setInterval(async () => {
-              try {
-                const baseUrl = apiUrl.split("v1/score/")[0] + "v1/";
-                const statusUrl = baseUrl + `application/${result.application_id}/status/`;
-                const res = await fetch(statusUrl);
-                const data = await res.json();
-                
-                if (data.trust_score) {
-                  clearInterval(pollInterval);
-                  
-                  scoreValue.textContent = data.trust_score;
-                  decisionLabel.textContent = (data.decision && data.decision.label) ? data.decision.label : data.status;
-                  
-                  if (data.trust_score >= 650) {
-                    resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-emerald-500 shadow-lg shadow-emerald-500/30";
-                    resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
-                    resultTitle.textContent = "Loan Approved!";
-                    resultTitle.className = "text-xl font-bold text-emerald-500 mb-1";
-                    resultDesc.textContent = "Money has been disbursed to your account.";
-                  } else {
-                    resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-yellow-500 shadow-lg shadow-yellow-500/30";
-                    resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
-                    resultTitle.textContent = "Further Review Required";
-                    resultTitle.className = "text-xl font-bold text-yellow-500 mb-1";
-                    resultDesc.textContent = "Pending Account Aggregator (AA) verification.";
-                  }
+  // Navigate to loan screen
+  $("#goToLoanBtn").addEventListener("click", () => showScreen(screenLoan, screenHome));
+  $("#promoBanner").addEventListener("click", () => showScreen(screenLoan, screenHome));
+  $("#backBtn").addEventListener("click", () => goBack(screenHome, screenLoan));
+
+  // Tab bar
+  $("#tabHome").addEventListener("click", () => {
+    if (!screenHome.classList.contains("active")) goBack(screenHome, screenLoan);
+  });
+
+  // Consent
+  const consentOverlay = $("#consentOverlay");
+  const consentCheckbox = $("#consentCheckbox");
+  const consentAcceptBtn = $("#consentAcceptBtn");
+
+  consentCheckbox.addEventListener("change", () => {
+    consentAcceptBtn.disabled = !consentCheckbox.checked;
+  });
+
+  // Loan elements
+  const launchBtn = $("#launchBtn");
+  const processingSection = $("#processingSection");
+  const terminalOutput = $("#terminalOutput");
+  const apiUrlInput = $("#apiUrlInput");
+  const scoreCard = $("#scoreCard");
+  const scoreValue = $("#scoreValue");
+  const decisionLabel = $("#decisionLabel");
+  const resultTitle = $("#resultTitle");
+  const resultDesc = $("#resultDesc");
+  const resultIconWrapper = $("#resultIconWrapper");
+
+  const terminal = new window.FinEdge.TerminalLogger(terminalOutput);
+
+  // Slider
+  const loanAmountSlider = $("#loanAmountSlider");
+  const loanAmountDisplay = $("#loanAmountDisplay");
+  const emiDisplay = $("#emiDisplay");
+
+  loanAmountSlider.addEventListener("input", (e) => {
+    const amount = parseInt(e.target.value, 10);
+    loanAmountDisplay.textContent = amount;
+    const P = amount, r = (14/100)/12, n = 3;
+    emiDisplay.textContent = Math.round(P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1));
+  });
+
+  // Apply button shows consent sheet
+  launchBtn.addEventListener("click", () => {
+    consentOverlay.classList.add("show");
+  });
+
+  // Consent accept triggers SDK
+  consentAcceptBtn.addEventListener("click", async () => {
+    consentOverlay.classList.remove("show");
+    launchBtn.classList.add("hidden");
+    scoreCard.classList.add("hidden");
+    processingSection.classList.remove("hidden");
+    terminal.clear();
+
+    const apiUrl = apiUrlInput.value.trim() || "https://finedge-iy0i.onrender.com/api/v1/score/";
+    const requestedAmount = parseInt(loanAmountSlider.value, 10);
+
+    await window.FinEdge.runEdgePipeline(terminal, apiUrl, requestedAmount, {
+      onScoreReceived: (result) => {
+        processingSection.classList.add("hidden");
+        scoreCard.classList.remove("hidden");
+        scoreValue.textContent = "---";
+        decisionLabel.textContent = result.decision || "PENDING";
+        resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-blue-500 shadow-lg shadow-blue-500/30";
+        resultTitle.textContent = "Application Submitted";
+        resultTitle.className = "text-xl font-bold text-blue-600 mb-1";
+        resultDesc.textContent = "Your application is under manual review by a bank officer.";
+        launchBtn.textContent = "Check Again";
+        launchBtn.classList.remove("hidden");
+
+        if (result.application_id) {
+          const pollInterval = setInterval(async () => {
+            try {
+              const baseUrl = apiUrl.split("v1/score/")[0] + "v1/";
+              const res = await fetch(baseUrl + `application/${result.application_id}/status/`);
+              const data = await res.json();
+              if (data.trust_score) {
+                clearInterval(pollInterval);
+                scoreValue.textContent = data.trust_score;
+                decisionLabel.textContent = (data.decision && data.decision.label) ? data.decision.label : data.status;
+                if (data.trust_score >= 650) {
+                  resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-emerald-500 shadow-lg shadow-emerald-500/30";
+                  resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                  resultTitle.textContent = "Loan Approved!";
+                  resultTitle.className = "text-xl font-bold text-emerald-500 mb-1";
+                  resultDesc.textContent = "Money has been disbursed to your account.";
+                } else {
+                  resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-yellow-500 shadow-lg shadow-yellow-500/30";
+                  resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                  resultTitle.textContent = "Further Review Required";
+                  resultTitle.className = "text-xl font-bold text-yellow-500 mb-1";
+                  resultDesc.textContent = "Pending Account Aggregator (AA) verification.";
                 }
-              } catch (e) {
-                console.error("Polling error", e);
               }
-            }, 3000);
-          }
-        },
-        onError: (errMessage) => {
-          processingSection.classList.add("hidden");
-          scoreCard.classList.remove("hidden");
-          
-          scoreValue.textContent = "ERR";
-          decisionLabel.textContent = "FAILED";
-          
-          resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-500 shadow-lg shadow-red-500/30";
-          resultTitle.textContent = "Submission Failed";
-          resultTitle.className = "text-xl font-bold text-red-600 mb-1";
-          launchBtn.textContent = "Try Again";
-          launchBtn.classList.remove("hidden");
+            } catch (e) { console.error("Polling error", e); }
+          }, 3000);
         }
-      });
+      },
+      onError: (errMessage) => {
+        processingSection.classList.add("hidden");
+        scoreCard.classList.remove("hidden");
+        scoreValue.textContent = "ERR";
+        decisionLabel.textContent = "FAILED";
+        resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-500 shadow-lg shadow-red-500/30";
+        resultTitle.textContent = "Submission Failed";
+        resultTitle.className = "text-xl font-bold text-red-600 mb-1";
+        launchBtn.textContent = "Try Again";
+        launchBtn.classList.remove("hidden");
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>
-
-
-
-
