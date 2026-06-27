@@ -1,16 +1,9 @@
 {
   "name": "FinEdge Developer Portal",
-  "short_name": "FinEdge",
-  "description": "Privacy-Preserving Edge-ML Credit Scoring Platform for Banks",
-  "start_url": "/devweb/index.html",
+  "short_name": "FinEdge Dev",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#1e3a8a",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%231e3a8a'/><text x='96' y='120' font-size='100' text-anchor='middle' fill='%23f59e0b' font-family='sans-serif' font-weight='bold'>F</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    }
-  ]
+  "theme_color": "#0f172a",
+  "orientation": "portrait"
 }
