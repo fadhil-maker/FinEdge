@@ -48,6 +48,7 @@ from typing import Any, Final
 
 import joblib
 import numpy as np
+import pandas as pd
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -305,14 +306,15 @@ def _step_3_ml_inference(
     model = _ModelRegistry.get_model()
     preprocessor = _ModelRegistry.get_preprocessor()
 
-    # Construct feature array in training column order
-    feature_array = np.array(
+    # Construct feature DataFrame in training column order with feature names
+    feature_df = pd.DataFrame(
         [[payload[col] for col in FEATURE_COLUMNS]],
+        columns=FEATURE_COLUMNS,
         dtype=np.float64,
     )
 
     # Scale features
-    feature_scaled = preprocessor.transform(feature_array)
+    feature_scaled = preprocessor.transform(feature_df)
 
     # Predict
     default_prob = float(model.predict_proba(feature_scaled)[0, 1])
