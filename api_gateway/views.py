@@ -202,14 +202,10 @@ def health_check(request: Request) -> Response:
 # ═══════════════════════════════════════════════════════════════════════════
 from django.shortcuts import render
 
-def landing_page(request: HttpRequest) -> HttpResponse:
-    """Render the public discovery portal."""
-    from .models import Bank
-    context = {
-        "banks": Bank.objects.filter(is_active=True).order_by("name")
-    }
-    return render(request, "api_gateway/landing.html", context)
+from django.shortcuts import redirect
 
+def landing_page(request):
+    return redirect('https://fin-edge-ten.vercel.app/devweb/index.html')
 def api_docs(request: HttpRequest) -> HttpResponse:
     """Render the Developer API documentation portal."""
     return render(request, "api_gateway/api_docs.html")
