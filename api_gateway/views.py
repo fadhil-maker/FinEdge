@@ -186,6 +186,7 @@ def _verify_hmac_signature(request: Request) -> bool:
 # Health check (public, no auth)
 # ═══════════════════════════════════════════════════════════════════════════
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def health_check(request: Request) -> Response:
     """Simple health-check endpoint to verify the API is running."""
     return Response(
