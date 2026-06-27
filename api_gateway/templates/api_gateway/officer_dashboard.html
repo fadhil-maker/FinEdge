@@ -321,27 +321,29 @@
     </footer>
   </div>
 
-  <script>
-    async function triggerTrustScore(appId) {
-      if (!confirm("Running FinEdge TrustScore incurs a ₹10 API fee. Proceed?")) return;
-      
-      try {
-          const response = await fetch(`/api/v1/trigger_score/${appId}/`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              }
-          });
-          const data = await response.json();
-          if (response.ok) {
-              window.location.reload();
-          } else {
-              alert("Error: " + data.error);
-          }
-      } catch (e) {
-          alert("Network error");
+      <script>
+      async function triggerTrustScore(appId) {
+        if (!confirm("Running FinEdge TrustScore incurs a ?10 API fee. Proceed?")) return;
+        
+        try {
+            const csrfToken = "{{ csrf_token }}";
+            const response = await fetch(/api/v1/trigger_score//, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert("Error: " + (data.error || data.detail || "Unknown error"));
+            }
+        } catch (e) {
+            alert("Network error");
+        }
       }
-    }
-  </script>
+    </script>
 </body>
 </html>

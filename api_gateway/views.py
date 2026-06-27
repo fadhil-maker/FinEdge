@@ -210,7 +210,7 @@ def api_docs(request: HttpRequest) -> HttpResponse:
     """Render the Developer API documentation portal."""
     return render(request, "api_gateway/api_docs.html")
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 
@@ -423,6 +423,7 @@ def application_status_check(request: Request, application_id: str) -> Response:
     })
 
 @api_view(["POST"])
+@authentication_classes([])
 @permission_classes([AllowAny])
 @csrf_exempt
 def trigger_trust_score(request: Request, application_id: str) -> Response:
