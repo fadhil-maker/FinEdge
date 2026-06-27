@@ -140,7 +140,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
-# FinEdge — Application Settings
+# FinEdge - Application Settings
 # ---------------------------------------------------------------------------
 # HMAC shared secret for Edge SDK payload signature verification
 FINEDGE_HMAC_SECRET = os.getenv('FINEDGE_HMAC_SECRET', 'finedge_hmac_shared_secret_2026').encode('utf-8')
