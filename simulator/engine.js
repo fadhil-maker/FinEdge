@@ -360,7 +360,7 @@ class TerminalLogger {
  * @param {number}         requestedAmount — The loan amount requested by the user.
  * @param {object}         uiCallbacks — { onScoreReceived, onError, onComplete }
  */
-async function runEdgePipeline(terminal, apiUrl, requestedAmount, uiCallbacks = {}) {
+async function runEdgePipeline(terminal, apiUrl, requestedAmount, profile, uiCallbacks = {}) {
   const startTime = performance.now();
 
   try {
