@@ -7,7 +7,7 @@ secret = b'finedge_hmac_shared_secret_2026'
 signature = hmac.new(secret, payload.encode('utf-8'), "sha256").hexdigest()
 
 headers = {
-    "Authorization": "Api-Key DqpYnf78.QPJum6C5BWiWtEJFq66fpN1Ayhul14Cm",
+    "Authorization": "Api-Key finedge_demo_api_key_2026",
     "Content-Type": "application/json",
     "X-FinEdge-Signature": signature
 }
