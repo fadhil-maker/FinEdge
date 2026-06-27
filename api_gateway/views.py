@@ -41,9 +41,12 @@ from typing import Any, Final
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -202,11 +205,6 @@ def health_check(request: Request) -> Response:
 # ═══════════════════════════════════════════════════════════════════════════
 # Public Landing Page
 # ═══════════════════════════════════════════════════════════════════════════
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import AllowAny
-
 def landing_page(request):
     return redirect('https://fin-edge-ten.vercel.app/devweb/index.html')
 
