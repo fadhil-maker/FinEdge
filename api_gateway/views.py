@@ -211,6 +211,7 @@ def api_docs(request: HttpRequest) -> HttpResponse:
     return render(request, "api_gateway/api_docs.html")
 
 from rest_framework.decorators import api_view, permission_classes
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 
 def privacy_policy(request: HttpRequest) -> HttpResponse:
@@ -423,6 +424,7 @@ def application_status_check(request: Request, application_id: str) -> Response:
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@csrf_exempt
 def trigger_trust_score(request: Request, application_id: str) -> Response:
     """Officer-triggered TrustScore calculation (The ₹10 API Hit)."""
     from django.shortcuts import get_object_or_404

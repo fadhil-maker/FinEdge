@@ -146,13 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 FINEDGE_HMAC_SECRET = os.getenv('FINEDGE_HMAC_SECRET', 'finedge_hmac_shared_secret_2026').encode('utf-8')
 
 # Strict CORS policy for production PWA
-_cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
-if _cors_origins:
-    CORS_ALLOWED_ORIGINS = _cors_origins.split(",")
-    CORS_ALLOW_ALL_ORIGINS = False
-else:
-    CORS_ALLOWED_ORIGINS = []
-    CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # DRF configuration to use HasAPIKey
 REST_FRAMEWORK = {
