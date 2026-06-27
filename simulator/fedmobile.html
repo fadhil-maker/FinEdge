@@ -67,7 +67,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- DPDP CONSENT MODAL (Kept for SDK requirement)             -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div id="consentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+  <div id="consentModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-full bg-fed-light flex items-center justify-center">
@@ -93,7 +93,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- NEXUS BANK MOBILE APP UI                                  -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <div id="app" class="mobile-frame opacity-0 transition-opacity flex flex-col">
+  <div id="app" class="mobile-frame transition-opacity flex flex-col">
     <!-- Status Bar Mock -->
     <div class="status-bar text-slate-800">
       <span>9:41</span>
@@ -235,9 +235,10 @@
     consentCheckbox.addEventListener("change", () => {
       consentAcceptBtn.disabled = !consentCheckbox.checked;
     });
-    consentAcceptBtn.addEventListener("click", () => {
-      consentModal.classList.add("hidden");
-      app.style.opacity = "1";
+    
+    // Launch button just shows the modal
+    launchBtn.addEventListener("click", () => {
+      consentModal.classList.remove("hidden");
     });
 
     // Slider Logic
@@ -260,8 +261,9 @@
       });
     }
 
-    // Launch
-    launchBtn.addEventListener("click", async () => {
+    // Consent Accept button triggers SDK
+    consentAcceptBtn.addEventListener("click", async () => {
+      consentModal.classList.add("hidden");
       launchBtn.classList.add("hidden");
       scoreCard.classList.add("hidden");
       processingSection.classList.remove("hidden");
