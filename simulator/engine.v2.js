@@ -360,7 +360,7 @@ class TerminalLogger {
  * @param {number}         requestedAmount — The loan amount requested by the user.
  * @param {object}         uiCallbacks — { onScoreReceived, onError, onComplete }
  */
-async function runEdgePipeline(terminal, apiUrl, requestedAmount, profile, uiCallbacks = {}) {
+async function runEdgePipeline(terminal, apiUrl, apiKey, requestedAmount, profile, uiCallbacks = {}) {
   const startTime = performance.now();
 
   try {
@@ -469,7 +469,7 @@ async function runEdgePipeline(terminal, apiUrl, requestedAmount, profile, uiCal
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Api-Key finedge_demo_api_key_2026",
+          "Authorization": "Api-Key " + apiKey,
           "X-FinEdge-Signature": signature,
         },
         body: payloadJson,
