@@ -40,6 +40,7 @@ from typing import Any, Final
 
 from django.conf import settings
 from django.db import transaction
+from django.http import HttpRequest, HttpResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -200,19 +201,17 @@ def health_check(request: Request) -> Response:
 # ═══════════════════════════════════════════════════════════════════════════
 # Public Landing Page
 # ═══════════════════════════════════════════════════════════════════════════
-from django.shortcuts import render
-
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
 
 def landing_page(request):
     return redirect('https://fin-edge-ten.vercel.app/devweb/index.html')
+
 def api_docs(request: HttpRequest) -> HttpResponse:
     """Render the Developer API documentation portal."""
     return render(request, "api_gateway/api_docs.html")
-
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.permissions import AllowAny
 
 def privacy_policy(request: HttpRequest) -> HttpResponse:
     """Render the privacy policy page."""
@@ -416,10 +415,14 @@ def application_status_check(request: Request, application_id: str) -> Response:
     from django.shortcuts import get_object_or_404
     app = get_object_or_404(LoanApplication, id=application_id)
     
+    trust = getattr(app, "trust_score", None)
+    score = None
+    if trust and trust.calculated_score is not None:
+        score = trust.calculated_score
+    
     return Response({
         "status": app.current_step,
-        "trust_score": app.trust_score if hasattr(app, "trust_score") and app.trust_score.calculated_score is not None else None,
-        "decision": app.decision_badge if hasattr(app, "decision_badge") else None
+        "trust_score": score,
     })
 
 @api_view(["POST"])

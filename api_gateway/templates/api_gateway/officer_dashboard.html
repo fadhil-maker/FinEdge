@@ -323,11 +323,11 @@
 
       <script>
       async function triggerTrustScore(appId) {
-        if (!confirm("Running FinEdge TrustScore incurs a ?10 API fee. Proceed?")) return;
+        if (!confirm("Running FinEdge TrustScore incurs a ₹10 API fee. Proceed?")) return;
         
         try {
             const csrfToken = "{{ csrf_token }}";
-            const response = await fetch(/api/v1/trigger_score//, {
+            const response = await fetch(`/api/v1/trigger_score/${appId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -341,7 +341,7 @@
                 alert("Error: " + (data.error || data.detail || "Unknown error"));
             }
         } catch (e) {
-            alert("Network error");
+            alert("Network error: " + e.message);
         }
       }
     </script>
