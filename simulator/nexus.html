@@ -438,12 +438,12 @@
   }
 
   // Navigate to loan screen
-  $("#goToLoanBtn").addEventListener("click", () => showScreen(screenLoan, screenHome));
-  $("#promoBanner").addEventListener("click", () => showScreen(screenLoan, screenHome));
-  $("#backBtn").addEventListener("click", () => goBack(screenHome, screenLoan));
+  if ($("#goToLoanBtn")) $("#goToLoanBtn").addEventListener("click", () => showScreen(screenLoan, screenHome));
+  if ($("#promoBanner")) $("#promoBanner").addEventListener("click", () => showScreen(screenLoan, screenHome));
+  if ($("#backBtn")) $("#backBtn").addEventListener("click", () => goBack(screenHome, screenLoan));
 
   // Tab bar
-  $("#tabHome").addEventListener("click", () => {
+  if ($("#tabHome")) $("#tabHome").addEventListener("click", () => {
     if (!screenHome.classList.contains("active")) goBack(screenHome, screenLoan);
   });
 
@@ -452,9 +452,11 @@
   const consentCheckbox = $("#consentCheckbox");
   const consentAcceptBtn = $("#consentAcceptBtn");
 
-  consentCheckbox.addEventListener("change", () => {
-    consentAcceptBtn.disabled = !consentCheckbox.checked;
-  });
+  if (consentCheckbox && consentAcceptBtn) {
+    consentCheckbox.addEventListener("change", () => {
+      consentAcceptBtn.disabled = !consentCheckbox.checked;
+    });
+  }
 
   // Loan elements
   const launchBtn = $("#launchBtn");
@@ -470,119 +472,142 @@
 
   const terminal = new window.FinEdge.TerminalLogger(terminalOutput);
 
-  // Slider
+  // Slider & Simulators
   const loanAmountSlider = $("#loanAmountSlider");
   const loanAmountDisplay = $("#loanAmountDisplay");
   const emiDisplay = $("#emiDisplay");
+  const tenureDisplay = $("#tenureDisplay");
+  const rateDisplay = $("#rateDisplay");
 
   let currentTenure = 3;
-    let currentRate = 11.5;
+  let currentRate = 11.5;
 
-    function calculateEMI() {
-      const P = parseInt(loanAmountSlider.value, 10);
-      loanAmountDisplay.textContent = P;
-      const r = (currentRate / 100) / 12;
-      const n = currentTenure;
-      const emi = Math.round(P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1));
-      emiDisplay.textContent = emi;
-      tenureDisplay.textContent = currentTenure;
-      rateDisplay.textContent = currentRate;
-      document.getElementById('tenureBadge').textContent = currentTenure + ' Months';
-    }
+  function calculateEMI() {
+    if (!loanAmountSlider) return;
+    const P = parseInt(loanAmountSlider.value, 10);
+    if (loanAmountDisplay) loanAmountDisplay.textContent = P;
+    const r = (currentRate / 100) / 12;
+    const n = currentTenure;
+    const emi = Math.round(P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1));
+    if (emiDisplay) emiDisplay.textContent = emi;
+    if (tenureDisplay) tenureDisplay.textContent = currentTenure;
+    if (rateDisplay) rateDisplay.textContent = currentRate;
+    const badge = document.getElementById('tenureBadge');
+    if (badge) badge.textContent = currentTenure + ' Months';
+  }
 
-    function selectTenure(m, r) {
-      currentTenure = m;
-      currentRate = r;
-      [3, 6, 12].forEach(t => {
-        const btn = document.getElementById('tbtn-' + t);
-        if (btn) {
-          if (t === m) {
-            btn.className = 'tenure-btn py-2 rounded-xl text-xs font-bold bg-bank text-white shadow-sm transition-all';
-          } else {
-            btn.className = 'tenure-btn py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all';
+  window.selectTenure = function(m, r) {
+    currentTenure = m;
+    currentRate = r;
+    [3, 6, 12].forEach(t => {
+      const btn = document.getElementById('tbtn-' + t);
+      if (btn) {
+        if (t === m) {
+          btn.className = 'tenure-btn py-2 rounded-xl text-xs font-bold bg-bank text-white shadow-sm transition-all';
+        } else {
+          btn.className = 'tenure-btn py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all';
+        }
+      }
+    });
+    calculateEMI();
+  };
+
+  if (loanAmountSlider) {
+    loanAmountSlider.addEventListener("input", calculateEMI);
+    calculateEMI();
+  }
+
+  // Apply button shows consent sheet
+  if (launchBtn) {
+    launchBtn.addEventListener("click", () => {
+      if (consentOverlay) consentOverlay.classList.add("show");
+    });
+  }
+
+  // Consent accept triggers SDK
+  if (consentAcceptBtn) {
+    consentAcceptBtn.addEventListener("click", async () => {
+      if (consentOverlay) consentOverlay.classList.remove("show");
+      if (launchBtn) launchBtn.classList.add("hidden");
+      if (scoreCard) scoreCard.classList.add("hidden");
+      if (processingSection) processingSection.classList.remove("hidden");
+      if (terminal) terminal.clear();
+
+      const apiUrl = (apiUrlInput && apiUrlInput.value.trim()) || "https://finedge-iy0i.onrender.com/api/v1/score/";
+      const requestedAmount = loanAmountSlider ? parseInt(loanAmountSlider.value, 10) : 1500;
+
+      await window.FinEdge.runEdgePipeline(terminal, apiUrl, "VgWTv8f0.wAQoI2ip4sNX1yk9ZaU1Z4UXJkGVjL6N", requestedAmount, "good", {
+        onScoreReceived: (result) => {
+          if (processingSection) processingSection.classList.add("hidden");
+          if (scoreCard) scoreCard.classList.remove("hidden");
+          if (scoreValue) scoreValue.textContent = "---";
+          if (decisionLabel) decisionLabel.textContent = result.decision || "PENDING";
+          if (resultIconWrapper) resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-blue-500 shadow-lg shadow-blue-500/30";
+          if (resultTitle) {
+            resultTitle.textContent = "Application Submitted";
+            resultTitle.className = "text-xl font-bold text-blue-600 mb-1";
+          }
+          if (resultDesc) resultDesc.textContent = "Your application is under manual review by a bank officer.";
+          if (launchBtn) {
+            launchBtn.textContent = "Check Again";
+            launchBtn.classList.remove("hidden");
+          }
+
+          if (result.application_id) {
+            const pollInterval = setInterval(async () => {
+              try {
+                const baseUrl = apiUrl.split("v1/score/")[0] + "v1/";
+                const res = await fetch(baseUrl + `application/${result.application_id}/status/`);
+                const data = await res.json();
+                if (data.trust_score) {
+                  clearInterval(pollInterval);
+                  if (scoreValue) scoreValue.textContent = data.trust_score;
+                  if (decisionLabel) decisionLabel.textContent = (data.decision && data.decision.label) ? data.decision.label : data.status;
+                  if (data.trust_score >= 650) {
+                    if (resultIconWrapper) {
+                      resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-emerald-500 shadow-lg shadow-emerald-500/30";
+                      resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                    }
+                    if (resultTitle) {
+                      resultTitle.textContent = "Loan Approved!";
+                      resultTitle.className = "text-xl font-bold text-emerald-500 mb-1";
+                    }
+                    if (resultDesc) resultDesc.textContent = "Money has been disbursed to your account.";
+                  } else {
+                    if (resultIconWrapper) {
+                      resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-yellow-500 shadow-lg shadow-yellow-500/30";
+                      resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                    }
+                    if (resultTitle) {
+                      resultTitle.textContent = "Further Review Required";
+                      resultTitle.className = "text-xl font-bold text-yellow-500 mb-1";
+                    }
+                    if (resultDesc) resultDesc.textContent = "Pending Account Aggregator (AA) verification.";
+                  }
+                }
+              } catch (e) { console.error("Polling error", e); }
+            }, 3000);
+          }
+        },
+        onError: (errMessage) => {
+          if (processingSection) processingSection.classList.add("hidden");
+          if (scoreCard) scoreCard.classList.remove("hidden");
+          if (scoreValue) scoreValue.textContent = "ERR";
+          if (decisionLabel) decisionLabel.textContent = "FAILED";
+          if (resultIconWrapper) resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-500 shadow-lg shadow-red-500/30";
+          if (resultTitle) {
+            resultTitle.textContent = "Submission Failed";
+            resultTitle.className = "text-xl font-bold text-red-600 mb-1";
+          }
+          if (resultDesc) resultDesc.textContent = errMessage || "An error occurred during verification.";
+          if (launchBtn) {
+            launchBtn.textContent = "Try Again";
+            launchBtn.classList.remove("hidden");
           }
         }
       });
-      calculateEMI();
-    }
-
-    loanAmountSlider.addEventListener("input", calculateEMI);
-    calculateEMI();
-    loanAmountDisplay.textContent = amount;
-    const P = amount, r = (14/100)/12, n = 3;
-    emiDisplay.textContent = Math.round(P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1));
-  });
-
-  // Apply button shows consent sheet
-  launchBtn.addEventListener("click", () => {
-    consentOverlay.classList.add("show");
-  });
-
-  // Consent accept triggers SDK
-  consentAcceptBtn.addEventListener("click", async () => {
-    consentOverlay.classList.remove("show");
-    launchBtn.classList.add("hidden");
-    scoreCard.classList.add("hidden");
-    processingSection.classList.remove("hidden");
-    terminal.clear();
-
-    const apiUrl = apiUrlInput.value.trim() || "https://finedge-iy0i.onrender.com/api/v1/score/";
-    const requestedAmount = parseInt(loanAmountSlider.value, 10);
-
-    await window.FinEdge.runEdgePipeline(terminal, apiUrl, "VgWTv8f0.wAQoI2ip4sNX1yk9ZaU1Z4UXJkGVjL6N", requestedAmount, "good", {
-      onScoreReceived: (result) => {
-        processingSection.classList.add("hidden");
-        scoreCard.classList.remove("hidden");
-        scoreValue.textContent = "---";
-        decisionLabel.textContent = result.decision || "PENDING";
-        resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-blue-500 shadow-lg shadow-blue-500/30";
-        resultTitle.textContent = "Application Submitted";
-        resultTitle.className = "text-xl font-bold text-blue-600 mb-1";
-        resultDesc.textContent = "Your application is under manual review by a bank officer.";
-        launchBtn.textContent = "Check Again";
-        launchBtn.classList.remove("hidden");
-
-        if (result.application_id) {
-          const pollInterval = setInterval(async () => {
-            try {
-              const baseUrl = apiUrl.split("v1/score/")[0] + "v1/";
-              const res = await fetch(baseUrl + `application/${result.application_id}/status/`);
-              const data = await res.json();
-              if (data.trust_score) {
-                clearInterval(pollInterval);
-                scoreValue.textContent = data.trust_score;
-                decisionLabel.textContent = (data.decision && data.decision.label) , data.decision.label : data.status;
-                if (data.trust_score >= 650) {
-                  resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-emerald-500 shadow-lg shadow-emerald-500/30";
-                  resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
-                  resultTitle.textContent = "Loan Approved!";
-                  resultTitle.className = "text-xl font-bold text-emerald-500 mb-1";
-                  resultDesc.textContent = "Money has been disbursed to your account.";
-                } else {
-                  resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-yellow-500 shadow-lg shadow-yellow-500/30";
-                  resultIconWrapper.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
-                  resultTitle.textContent = "Further Review Required";
-                  resultTitle.className = "text-xl font-bold text-yellow-500 mb-1";
-                  resultDesc.textContent = "Pending Account Aggregator (AA) verification.";
-                }
-              }
-            } catch (e) { console.error("Polling error", e); }
-          }, 3000);
-        }
-      }
-      onError: (errMessage) => {
-        processingSection.classList.add("hidden");
-        scoreCard.classList.remove("hidden");
-        scoreValue.textContent = "ERR";
-        decisionLabel.textContent = "FAILED";
-        resultIconWrapper.className = "w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3 bg-red-500 shadow-lg shadow-red-500/30";
-        resultTitle.textContent = "Submission Failed";
-        resultTitle.className = "text-xl font-bold text-red-600 mb-1";
-        launchBtn.textContent = "Try Again";
-        launchBtn.classList.remove("hidden");
-      }
     });
-  });
+  }
 </script>
 </body>
 </html>
