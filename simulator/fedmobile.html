@@ -10,9 +10,9 @@
       theme: {
         extend: {
           colors: {
-            'nexus-blue': '#1e3a8a',
-            'nexus-light': '#eff6ff',
-            'nexus-accent': '#f59e0b',
+            'fed-primary': '#047857',
+            'fed-light': '#ecfdf5',
+            'fed-accent': '#10b981',
             'finedge': '#00e5a0'
           },
           fontFamily: {
@@ -70,8 +70,8 @@
   <div id="consentModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
       <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-full bg-nexus-light flex items-center justify-center">
-          <svg class="w-5 h-5 text-nexus-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+        <div class="w-10 h-10 rounded-full bg-fed-light flex items-center justify-center">
+          <svg class="w-5 h-5 text-fed-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
         </div>
         <div>
           <h2 class="text-base font-bold text-slate-800">Permission Required</h2>
@@ -84,7 +84,7 @@
         <input type="checkbox" id="consentCheckbox" class="mt-0.5" />
         <span class="text-[10px] text-slate-600">I consent to on-device processing under the DPDP Act.</span>
       </label>
-      <button id="consentAcceptBtn" disabled class="w-full py-2.5 rounded-xl font-bold bg-nexus-blue text-white disabled:bg-slate-300 transition-colors">
+      <button id="consentAcceptBtn" disabled class="w-full py-2.5 rounded-xl font-bold bg-fed-primary text-white disabled:bg-slate-300 transition-colors">
         Accept & Continue
       </button>
     </div>
@@ -104,9 +104,9 @@
     </div>
 
     <!-- Header -->
-    <div class="bg-nexus-blue text-white px-5 py-4 pb-12 rounded-b-3xl">
+    <div class="bg-fed-primary text-white px-5 py-4 pb-12 rounded-b-3xl">
       <div class="flex justify-between items-center mb-6">
-        <div class="font-black text-xl tracking-tight">NEXUS<span class="text-nexus-accent">BANK</span></div>
+        <div class="font-black text-xl tracking-tight">FED<span class="text-fed-accent">MOBILE</span></div>
         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">JD</div>
       </div>
       <p class="text-xs text-blue-200">Total Balance</p>
@@ -127,9 +127,9 @@
         <div class="mb-4">
           <div class="flex justify-between items-center mb-2">
             <span class="text-[10px] text-slate-500 font-bold uppercase">Requested Amount</span>
-            <span class="text-lg font-black text-nexus-blue">₹<span id="loanAmountDisplay">2000</span></span>
+            <span class="text-lg font-black text-fed-primary">₹<span id="loanAmountDisplay">2000</span></span>
           </div>
-          <input type="range" id="loanAmountSlider" min="500" max="5000" step="100" value="2000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-nexus-accent" />
+          <input type="range" id="loanAmountSlider" min="500" max="5000" step="100" value="2000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-fed-accent" />
           <div class="flex justify-between mt-1 text-[9px] text-slate-400 font-bold">
             <span>₹500</span>
             <span>₹5,000</span>
@@ -147,7 +147,7 @@
           </div>
         </div>
         
-        <button id="launchBtn" class="w-full py-3 rounded-xl font-bold bg-nexus-accent text-white hover:bg-orange-500 transition-colors shadow-md">
+        <button id="launchBtn" class="w-full py-3 rounded-xl font-bold bg-fed-accent text-white hover:bg-orange-500 transition-colors shadow-md">
           Apply Now
         </button>
       </div>
@@ -165,7 +165,7 @@
       </div>
 
       <!-- Result Card -->
-      <div id="scoreCard" class="hidden bg-nexus-light border border-blue-200 rounded-2xl p-5 mb-5 text-center shadow-inner">
+      <div id="scoreCard" class="hidden bg-fed-light border border-blue-200 rounded-2xl p-5 mb-5 text-center shadow-inner">
         <div class="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-3" id="resultIconWrapper">
           <svg id="resultIcon" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
         </div>
@@ -175,7 +175,7 @@
         <div class="bg-white rounded-lg p-3 text-left border border-slate-100">
           <div class="flex justify-between items-center mb-2">
             <span class="text-[10px] text-slate-500 uppercase font-bold">Your TrustScore</span>
-            <span class="text-sm font-black text-nexus-blue" id="scoreValue">---</span>
+            <span class="text-sm font-black text-fed-primary" id="scoreValue">---</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-[10px] text-slate-500 uppercase font-bold">Decision Path</span>
@@ -338,6 +338,7 @@
   </script>
 </body>
 </html>
+
 
 
 
