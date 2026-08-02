@@ -1,0 +1,51 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "finedge_backend/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
+    },
+    {
+      "src": "vercel-frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "finedge_backend/wsgi.py"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "finedge_backend/wsgi.py"
+    },
+    {
+      "src": "/officer",
+      "dest": "/vercel-frontend/officer/index.html"
+    },
+    {
+      "src": "/officer/(.*)",
+      "dest": "/vercel-frontend/officer/$1"
+    },
+    {
+      "src": "/app",
+      "dest": "/vercel-frontend/app/index.html"
+    },
+    {
+      "src": "/app/(.*)",
+      "dest": "/vercel-frontend/app/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/vercel-frontend/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "finedge_backend/wsgi.py"
+    }
+  ]
+}
