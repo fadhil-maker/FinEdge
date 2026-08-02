@@ -561,6 +561,14 @@
 
     // UI Navigation
     function navigateTo(screenId) {
+        if (screenId === 'loan-screen') {
+            const activeApp = profileAppsMap[currentProfile];
+            if (activeApp && (activeApp.status === 'PENDING' || activeApp.status === 'FALLBACK_REVIEW' || activeApp.status === 'SDK_RECEIVED')) {
+                alert(`⚠️ ${demoProfiles[currentProfile].name} already has an active loan application pending review. Please wait for an officer decision before applying again.`);
+                return;
+            }
+        }
+
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
         
