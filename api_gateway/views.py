@@ -526,16 +526,22 @@ def trigger_trust_score(request: Request, application_id: str) -> Response:
 @permission_classes([AllowAny])
 @csrf_exempt
 def trigger_decision(request: Request, application_id: str) -> Response:
-    """Officer-triggered decision to approve or reject the application."""
+    """Officer-triggered decision to approve, hold, or reject the application."""
     from django.shortcuts import get_object_or_404
+    from .models import LoanApplication, LoanApplicationStep
     app = get_object_or_404(LoanApplication, id=application_id)
     decision = request.data.get("decision", "").upper()
     
-    if decision not in ["APPROVED", "REJECTED"]:
-        return Response({"error": "Invalid decision"}, status=status.HTTP_400_BAD_REQUEST)
+    if decision not in ["ACCEPT", "REJECT", "HOLD"]:
+        return Response({"error": f"Invalid decision: {decision}"}, status=status.HTTP_400_BAD_REQUEST)
         
-    app.status = LoanApplicationStatus.APPROVED if decision == "APPROVED" else LoanApplicationStatus.REJECTED
-    app.current_step = LoanApplicationStep.COMPLETED
+    if decision == "ACCEPT":
+        app.current_step = LoanApplicationStep.DECISION_RENDERED
+    elif decision == "REJECT":
+        app.current_step = LoanApplicationStep.REJECTED
+    elif decision == "HOLD":
+        app.current_step = LoanApplicationStep.FALLBACK_REVIEW
+        
     app.save()
     
     return Response({"status": "success", "decision": decision})
