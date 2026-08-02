@@ -344,18 +344,18 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
     tenant_volumes = []
     if nexus_bank:
         for b in [nexus_bank]:
-        app_count = b.loan_applications.count()
-        rev_agg = b.billing_entries.aggregate(total=Sum("computed_charge"))
-        revenue = rev_agg["total"] or Decimal("0.00")
-        session_count = b.sdk_sessions.count()
-        
-        tenant_volumes.append({
-            "name": b.name,
-            "tenant_code": b.tenant_code,
-            "app_count": app_count,
-            "revenue": revenue,
-            "session_count": session_count,
-        })
+            app_count = b.loan_applications.count()
+            rev_agg = b.billing_entries.aggregate(total=Sum("computed_charge"))
+            revenue = rev_agg["total"] or Decimal("0.00")
+            session_count = b.sdk_sessions.count()
+            
+            tenant_volumes.append({
+                "name": b.name,
+                "tenant_code": b.tenant_code,
+                "app_count": app_count,
+                "revenue": revenue,
+                "session_count": session_count,
+            })
 
     # ── Velocity Lock Alerts ──────────────────────────────────────────────
     velocity_alerts = _detect_velocity_locks()
