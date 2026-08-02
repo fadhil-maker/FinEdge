@@ -308,6 +308,16 @@ class LoanApplication(UUIDBaseModel):
         max_digits=10, decimal_places=2, default=Decimal("2000.00"),
         help_text="Requested loan amount (defaulting to Mini Loan size)."
     )
+    applicant_name = models.CharField(
+        max_length=150,
+        default="Demo User",
+        help_text="Extracted name of the applicant."
+    )
+    applicant_phone = models.CharField(
+        max_length=20,
+        default="+91 0000000000",
+        help_text="Extracted phone number."
+    )
     tenure_months = models.IntegerField(
         default=3,
         help_text="Requested tenure in months."

@@ -369,6 +369,8 @@ class SubmitEdgeMetadataView(APIView):
                     tracking_reference=tracking_reference,
                     current_step=LoanApplicationStep.SDK_RECEIVED,
                     requested_amount=requested_amount,
+                    applicant_name=data.get("applicant_name", "Demo User"),
+                    applicant_phone=data.get("applicant_phone", "+91 00000 00000"),
                     tenure_months=data.get("tenure_months", 3),
                     cibil_score=-1, # Automatically -1 for New to Credit
                 )

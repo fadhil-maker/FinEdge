@@ -192,6 +192,26 @@ def _get_decision_display(trust_result: TrustScoreResult) -> dict[str, str]:
             "icon": "⏳",
         }
 
+    if step == LoanApplicationStep.DECISION_RENDERED:
+        return {
+            "label": "Approved / Pending Transfer",
+            "color": "blue",
+            "bg": "bg-blue-500/10",
+            "text": "text-blue-400",
+            "border": "border-blue-500/20",
+            "icon": "✅",
+        }
+
+    if step == LoanApplicationStep.REJECTED:
+        return {
+            "label": "Application Rejected",
+            "color": "red",
+            "bg": "bg-red-500/10",
+            "text": "text-red-400",
+            "border": "border-red-500/20",
+            "icon": "❌",
+        }
+
     score = trust_result.calculated_score
     if score is None:
         return {
@@ -203,7 +223,6 @@ def _get_decision_display(trust_result: TrustScoreResult) -> dict[str, str]:
             "icon": "⏳",
         }
 
-    # Infer decision from waterfall metadata
     # Bureau approvals have score >= 750 and no default_probability
     if score >= 750 and trust_result.default_probability is None:
         return {
@@ -218,7 +237,7 @@ def _get_decision_display(trust_result: TrustScoreResult) -> dict[str, str]:
     # ML-scored
     if score >= 650:
         return {
-            "label": "Approved via Edge-ML",
+            "label": "Score: Approved via Edge-ML",
             "color": "green",
             "bg": "bg-emerald-500/10",
             "text": "text-emerald-400",
@@ -227,11 +246,11 @@ def _get_decision_display(trust_result: TrustScoreResult) -> dict[str, str]:
         }
 
     return {
-        "label": "Under Review",
-        "color": "red",
-        "bg": "bg-red-500/10",
-        "text": "text-red-400",
-        "border": "border-red-500/20",
+        "label": "Score: Under Review",
+        "color": "amber",
+        "bg": "bg-amber-500/10",
+        "text": "text-amber-400",
+        "border": "border-amber-500/20",
         "icon": "🔍",
     }
 
@@ -519,6 +538,8 @@ def officer_api_applications(request: HttpRequest, tenant_code: str) -> HttpResp
         entry = {
             "id": str(app.id),
             "tracking_reference": app.tracking_reference,
+            "applicant_name": getattr(app, "applicant_name", "Demo User"),
+            "applicant_phone": getattr(app, "applicant_phone", "+91 00000 00000"),
             "current_step": app.get_current_step_display(),
             "current_step_raw": app.current_step,
             "created_at": app.created_at.isoformat(),

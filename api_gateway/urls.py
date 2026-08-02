@@ -18,6 +18,7 @@ urlpatterns = [
     # Authenticated — Edge SDK scoring endpoint
     path("v1/score/", views.SubmitEdgeMetadataView.as_view(), name="submit_edge_metadata"),
     path("v1/trigger_score/<str:application_id>/", views.trigger_trust_score, name="trigger_trust_score"),
+    path("v1/trigger_decision/<str:application_id>/", views.trigger_decision, name="trigger_decision"),
     path("v1/application/<str:application_id>/status/", views.application_status_check, name="application_status_check"),
 
     # Dashboards (Server-rendered Django templates)

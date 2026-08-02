@@ -154,14 +154,22 @@
     <div id="home-screen" class="screen active">
         <!-- Header -->
         <div class="bg-gradient-to-br from-navy-800 to-blue-700 pt-12 pb-24 px-6 rounded-b-[40px] text-white relative">
+            
+            <!-- DEMO PROFILE SWITCHER -->
+            <div class="flex justify-center space-x-2 mb-6">
+                <button id="profile-btn-good" onclick="setProfile('good')" class="profile-btn px-3 py-1 bg-white/10 rounded-full text-xs font-semibold ring-2 ring-white">Good Profile</button>
+                <button id="profile-btn-average" onclick="setProfile('average')" class="profile-btn px-3 py-1 bg-white/10 rounded-full text-xs font-semibold">Average</button>
+                <button id="profile-btn-bad" onclick="setProfile('bad')" class="profile-btn px-3 py-1 bg-white/10 rounded-full text-xs font-semibold">Bad</button>
+            </div>
+
             <div class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold text-lg">
+                    <div id="user-initials" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold text-lg">
                         JD
                     </div>
                     <div>
                         <p class="text-xs text-blue-100 opacity-80">Good Morning,</p>
-                        <p class="font-semibold text-lg tracking-tight">John Doe</p>
+                        <p id="user-name" class="font-semibold text-lg tracking-tight">John Doe</p>
                     </div>
                 </div>
                 <button class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center relative">
@@ -172,7 +180,7 @@
             
             <p class="text-blue-100 text-sm mb-1">Total Balance</p>
             <div class="flex items-baseline gap-1">
-                <h1 class="text-4xl font-bold tracking-tight">₹4,00,250<span class="text-2xl text-blue-200">.00</span></h1>
+                <h1 id="user-balance" class="text-4xl font-bold tracking-tight">₹450.00</h1>
             </div>
         </div>
 
@@ -673,6 +681,34 @@
         });
     }
 
+    // Profiles
+    const demoProfiles = {
+        good: {
+            name: "John Doe", phone: "+91 98765 43210", balance: "₹450.00",
+            vector: { device_age_days: 800, utility_sms_count: 65, battery_deaths_weekly: 0, saved_contacts_ratio: 0.95, financial_apps_count: 5, average_monthly_balance: 150000, lifetime_emi_bounces: 0 }
+        },
+        average: {
+            name: "Rahul Verma", phone: "+91 87654 32109", balance: "₹125.00",
+            vector: { device_age_days: 300, utility_sms_count: 20, battery_deaths_weekly: 2, saved_contacts_ratio: 0.60, financial_apps_count: 2, average_monthly_balance: 20000, lifetime_emi_bounces: 1 }
+        },
+        bad: {
+            name: "Ramesh Singh", phone: "+91 76543 21098", balance: "₹10.00",
+            vector: { device_age_days: 45, utility_sms_count: 2, battery_deaths_weekly: 8, saved_contacts_ratio: 0.15, financial_apps_count: 1, average_monthly_balance: 1500, lifetime_emi_bounces: 4 }
+        }
+    };
+    let currentProfile = 'good';
+
+    function setProfile(type) {
+        currentProfile = type;
+        const p = demoProfiles[type];
+        document.getElementById('user-initials').innerText = p.name.split(' ').map(n=>n[0]).join('');
+        document.getElementById('user-name').innerText = p.name;
+        document.getElementById('user-balance').innerText = p.balance;
+        
+        document.querySelectorAll('.profile-btn').forEach(btn => btn.classList.remove('ring-2', 'ring-white'));
+        document.getElementById('profile-btn-' + type).classList.add('ring-2', 'ring-white');
+    }
+
     // Processing Flow
     async function startProcessing() {
         hideConsentSheet();
@@ -687,15 +723,8 @@
         await addTerminalLog('📊 Computing mathematical vector...', 800);
         
         // Generate Payload
-        const vector = {
-            device_age_days: Math.floor(Math.random() * 700) + 30,
-            utility_sms_count: Math.floor(Math.random() * 60) + 5,
-            battery_deaths_weekly: Math.floor(Math.random() * 5),
-            saved_contacts_ratio: +(Math.random() * 0.8 + 0.1).toFixed(2),
-            financial_apps_count: Math.floor(Math.random() * 8) + 1,
-            average_monthly_balance: Math.floor(Math.random() * 80000) + 5000,
-            lifetime_emi_bounces: Math.floor(Math.random() * 4),
-        };
+        const p = demoProfiles[currentProfile];
+        const vector = p.vector;
 
         const rawDeviceStr = navigator.userAgent + Date.now().toString();
         const device_hash_mask = await sha256(rawDeviceStr);
@@ -704,6 +733,8 @@
         const payloadObj = {
             device_hash_mask,
             tracking_reference,
+            applicant_name: p.name,
+            applicant_phone: p.phone,
             mathematical_vector: vector,
             requested_amount: amount,
             tenure_months: currentMonths
@@ -766,7 +797,7 @@
                 if(res.status === 200) {
                     const data = await res.json();
                     
-                    if(data.trust_score !== null) {
+                    if(data.status === 'DECISION_RENDERED' || data.status === 'REJECTED' || data.status === 'COMPLETED') {
                         clearInterval(pollInterval);
                         showResult(data);
                     }
@@ -810,15 +841,32 @@
         document.getElementById('result-interest').innerText = summaryInterest.innerText;
         document.getElementById('result-emi').innerText = summaryEmi.innerText;
 
-        if(score >= 650) {
+        if(data.status === 'DECISION_RENDERED' || data.status === 'COMPLETED') {
             // Success
             titleEl.innerText = 'Loan Approved! ✅';
             titleEl.className = 'text-2xl font-bold mb-1 z-10 text-gray-900';
-            subtitleEl.innerText = 'Funds will be credited instantly.';
+            subtitleEl.innerText = 'Funds have been credited instantly.';
             scoreEl.className = 'text-3xl font-bold text-green-600';
             scoreBarEl.className = 'bg-green-500 h-2 rounded-full';
             iconContainer.classList.add('bg-green-100');
             iconSuccess.classList.remove('hidden');
+
+            // Credit the amount to the user's demo profile balance
+            const p = demoProfiles[currentProfile];
+            let currentBalanceNum = parseFloat(p.balance.replace(/[^0-9.]/g, ''));
+            currentBalanceNum += data.requested_amount;
+            p.balance = '₹' + currentBalanceNum.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('user-balance').innerText = p.balance;
+
+        } else if (data.status === 'REJECTED') {
+            // Rejected
+            titleEl.innerText = 'Application Rejected';
+            titleEl.className = 'text-2xl font-bold mb-1 z-10 text-gray-900';
+            subtitleEl.innerText = 'Unfortunately, your loan was not approved.';
+            scoreEl.className = 'text-3xl font-bold text-red-600';
+            scoreBarEl.className = 'bg-red-500 h-2 rounded-full';
+            iconContainer.classList.add('bg-red-100');
+            iconWarning.classList.remove('hidden');
         } else {
             // Warning
             titleEl.innerText = 'Further Review Required';
