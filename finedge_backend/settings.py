@@ -149,6 +149,11 @@ FINEDGE_HMAC_SECRET = os.getenv('FINEDGE_HMAC_SECRET', 'finedge_hmac_shared_secr
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-finedge-signature",
+]
+
 # DRF configuration to use HasAPIKey
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
