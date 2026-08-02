@@ -32,12 +32,20 @@
       "dest": "/vercel-frontend/officer/$1"
     },
     {
-      "src": "/app",
+      "src": "/user",
       "dest": "/vercel-frontend/app/index.html"
     },
     {
-      "src": "/app/(.*)",
+      "src": "/user/(.*)",
       "dest": "/vercel-frontend/app/$1"
+    },
+    {
+      "src": "/developer",
+      "dest": "/vercel-frontend/index.html"
+    },
+    {
+      "src": "/developer/(.*)",
+      "dest": "/vercel-frontend/$1"
     },
     {
       "src": "/",
