@@ -483,3 +483,95 @@ def officer_dashboard(request: HttpRequest, tenant_code: str) -> HttpResponse:
     }
 
     return render(request, "api_gateway/officer_dashboard.html", context)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Officer JSON API (For Vercel Static Frontend)
+# ═══════════════════════════════════════════════════════════════════════════
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+
+@csrf_exempt
+def officer_api_applications(request: HttpRequest, tenant_code: str) -> HttpResponse:
+    """
+    JSON API for the static Vercel officer dashboard.
+    Returns all applications with XAI data for a given tenant.
+
+    ``GET /api/officer/<tenant_code>/applications/``
+    """
+    try:
+        bank = Bank.objects.get(tenant_code=tenant_code, is_active=True)
+    except Bank.DoesNotExist:
+        return JsonResponse({"error": "Bank not found"}, status=404)
+
+    applications_qs = (
+        LoanApplication.tenant_objects.for_tenant(bank)
+        .select_related("trust_score", "sdk_session")
+        .order_by("-created_at")[:50]
+    )
+
+    apps_data = []
+    for app in applications_qs:
+        trust = getattr(app, "trust_score", None)
+        vector = trust.mathematical_vector if trust else {}
+
+        entry = {
+            "id": str(app.id),
+            "tracking_reference": app.tracking_reference,
+            "current_step": app.get_current_step_display(),
+            "current_step_raw": app.current_step,
+            "created_at": app.created_at.isoformat(),
+            "requested_amount": float(app.requested_amount),
+            "trust_score": trust.calculated_score if trust else None,
+            "default_probability": trust.default_probability if trust else None,
+            "is_thin_file": trust.is_thin_file if trust else False,
+            "model_version": trust.model_version if trust else None,
+            "mathematical_vector": vector or {},
+            "decision_badge": _get_decision_display(trust) if trust else {
+                "label": "Pending Officer Review",
+                "color": "slate",
+                "bg": "bg-slate-500/10",
+                "text": "text-slate-400",
+                "border": "border-slate-500/20",
+                "icon": "⏳",
+            },
+            "xai_reasons": _generate_xai_reasons(vector or {}),
+        }
+        apps_data.append(entry)
+
+    # Compute stats
+    from django.db.models import Avg
+    total_apps = LoanApplication.tenant_objects.for_tenant(bank).count()
+    avg_score = (
+        TrustScoreResult.objects
+        .filter(loan_application__bank=bank)
+        .aggregate(avg=Avg("calculated_score"))["avg"]
+    )
+    approval_count = (
+        LoanApplication.tenant_objects.for_tenant(bank)
+        .filter(current_step=LoanApplicationStep.SCORE_COMPUTED)
+        .count()
+    )
+    fallback_count = (
+        LoanApplication.tenant_objects.for_tenant(bank)
+        .filter(current_step=LoanApplicationStep.FALLBACK_REVIEW)
+        .count()
+    )
+    tenant_revenue = (
+        BillingLedger.tenant_objects.for_tenant(bank)
+        .aggregate(total=Sum("computed_charge"))["total"]
+        or Decimal("0.00")
+    )
+
+    return JsonResponse({
+        "bank": {"name": bank.name, "tenant_code": bank.tenant_code},
+        "stats": {
+            "total_apps": total_apps,
+            "avg_score": int(avg_score or 0),
+            "approval_count": approval_count,
+            "fallback_count": fallback_count,
+            "tenant_revenue": float(tenant_revenue),
+        },
+        "applications": apps_data,
+    })

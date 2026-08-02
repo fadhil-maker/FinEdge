@@ -411,18 +411,47 @@ class SubmitEdgeMetadataView(APIView):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def application_status_check(request: Request, application_id: str) -> Response:
-    """Mobile app polling endpoint to get real-time status."""
+    """
+    Mobile app polling endpoint to get real-time status with full details.
+
+    Returns loan amount, trust score, XAI explanation, and decision info
+    so the user mobile app can display comprehensive status updates.
+    """
     from django.shortcuts import get_object_or_404
     app = get_object_or_404(LoanApplication, id=application_id)
     
     trust = getattr(app, "trust_score", None)
     score = None
-    if trust and trust.calculated_score is not None:
-        score = trust.calculated_score
+    default_prob = None
+    is_thin_file = False
+    xai_reasons = []
+    vector = {}
+    decision = None
+    
+    if trust:
+        if trust.calculated_score is not None:
+            score = trust.calculated_score
+        default_prob = trust.default_probability
+        is_thin_file = trust.is_thin_file
+        vector = trust.mathematical_vector or {}
+        
+        # Generate XAI reasons
+        from .dashboard_views import _generate_xai_reasons, _get_decision_display
+        xai_reasons = _generate_xai_reasons(vector)
+        if trust.calculated_score is not None:
+            decision = _get_decision_display(trust)
     
     return Response({
         "status": app.current_step,
         "trust_score": score,
+        "default_probability": default_prob,
+        "is_thin_file": is_thin_file,
+        "requested_amount": float(app.requested_amount),
+        "tracking_reference": app.tracking_reference,
+        "created_at": app.created_at.isoformat(),
+        "xai_reasons": xai_reasons,
+        "mathematical_vector": vector,
+        "decision": decision,
     })
 
 @api_view(["POST"])

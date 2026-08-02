@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NexusBank | Instant Loan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            800: '#1e3a8a',
+                            900: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Outer background to frame the app */
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        #app-container {
+            width: 100%;
+            max-width: 430px;
+            background-color: #f1f5f9;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f1f5f9;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: translateX(100%);
+            opacity: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+        .screen.active {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 20;
+        }
+        #home-screen {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        /* Bottom Sheet */
+        .bottom-sheet-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .bottom-sheet-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 51;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        .bottom-sheet.active {
+            transform: translateY(0);
+        }
+
+        /* Animations */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .pulse-animation::before {
+            content: '';
+            position: absolute;
+            left: -10px; top: -10px; right: -10px; bottom: -10px;
+            border-radius: 50%;
+            border: 2px solid #f59e0b;
+            animation: pulse-ring 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        .terminal-text {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #10b981;
+        }
+
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #f59e0b;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <!-- ================== SCREEN 1: HOME ================== -->
+    <div id="home-screen" class="screen active">
+        <!-- Header -->
+        <div class="bg-gradient-to-br from-navy-800 to-blue-700 pt-12 pb-24 px-6 rounded-b-[40px] text-white relative">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-semibold text-lg">
+                        JD
+                    </div>
+                    <div>
+                        <p class="text-xs text-blue-100 opacity-80">Good Morning,</p>
+                        <p class="font-semibold text-lg tracking-tight">John Doe</p>
+                    </div>
+                </div>
+                <button class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center relative">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+            </div>
+            
+            <p class="text-blue-100 text-sm mb-1">Total Balance</p>
+            <div class="flex items-baseline gap-1">
+                <h1 class="text-4xl font-bold tracking-tight">₹4,00,250<span class="text-2xl text-blue-200">.00</span></h1>
+            </div>
+        </div>
+
+        <!-- Floating Action Bar -->
+        <div class="px-6 -mt-12 relative z-10">
+            <div class="glass-card rounded-2xl p-4 flex justify-around">
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">Send</span>
+                </button>
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">Receive</span>
+                </button>
+                <button class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">Pay</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Banner -->
+        <div class="px-6 mt-6">
+            <div onclick="navigateTo('loan-screen')" class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden cursor-pointer active:scale-95 transition-transform">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-100 bg-white/20 px-2 py-1 rounded">Pre-Approved</span>
+                        <h3 class="font-bold text-lg mt-2">Instant Mini Loan</h3>
+                        <p class="text-xs text-blue-100 mt-1">Get up to ₹5,000 in seconds ⚡</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="px-6 mt-8">
+            <h3 class="text-sm font-semibold text-gray-800 mb-4">Services</h3>
+            <div class="grid grid-cols-4 gap-y-6">
+                <div class="flex flex-col items-center gap-2 cursor-pointer" onclick="navigateTo('loan-screen')">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">⚡</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Mini Loan</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">📦</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Gold Loan</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">💳</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Cards</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">↔️</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Transfer</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">📊</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Invest</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">🔧</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Utility</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl">📱</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">Recharge</span>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl text-gray-400">···</div>
+                    <span class="text-xs text-gray-600 font-medium text-center">More</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="px-6 mt-8 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-semibold text-gray-800">Recent Transactions</h3>
+                <button class="text-xs text-blue-600 font-medium">See All</button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Electricity Bill</p>
+                            <p class="text-xs text-gray-500">Today, 09:41 AM</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-800">-₹1,240</p>
+                </div>
+                
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Salary Credit</p>
+                            <p class="text-xs text-gray-500">Yesterday, 11:30 AM</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-green-600">+₹85,000</p>
+                </div>
+
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Amazon</p>
+                            <p class="text-xs text-gray-500">14 Aug, 04:20 PM</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-800">-₹2,499</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================== SCREEN 2: LOAN APPLICATION ================== -->
+    <div id="loan-screen" class="screen bg-white">
+        <!-- Header -->
+        <div class="px-6 py-6 pt-12 flex items-center justify-between sticky top-0 bg-white z-10 shadow-sm">
+            <button onclick="navigateTo('home-screen')" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 active:bg-gray-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <h2 class="font-semibold text-gray-800">Instant Mini Loan</h2>
+            <div class="w-10"></div> <!-- spacer -->
+        </div>
+
+        <div class="px-6 mt-6 pb-24">
+            <!-- Amount Section -->
+            <div class="text-center mb-8">
+                <p class="text-sm text-gray-500 font-medium mb-2">How much do you need?</p>
+                <div class="flex justify-center items-baseline">
+                    <span class="text-3xl font-bold text-gray-800 mr-1">₹</span>
+                    <input type="number" id="loan-amount-input" value="2500" readonly class="text-5xl font-bold text-gray-900 bg-transparent text-center w-40 outline-none border-none pointer-events-none">
+                </div>
+            </div>
+
+            <!-- Slider -->
+            <div class="mb-10 px-2">
+                <input type="range" id="loan-slider" min="500" max="5000" step="100" value="2500" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                <div class="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                    <span>₹500</span>
+                    <span>₹5,000</span>
+                </div>
+            </div>
+
+            <!-- Tenure Selection -->
+            <h3 class="text-sm font-semibold text-gray-800 mb-4">Select Repayment Tenure</h3>
+            <div class="grid grid-cols-3 gap-3 mb-8">
+                <button class="tenure-btn active flex flex-col items-center justify-center p-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-blue-700 transition-all" data-months="3" data-rate="11.5">
+                    <span class="font-bold">3 Mo</span>
+                    <span class="text-[10px] opacity-80 mt-1">11.5% p.a.</span>
+                </button>
+                <button class="tenure-btn flex flex-col items-center justify-center p-3 rounded-xl border-2 border-gray-200 bg-white text-gray-500 transition-all" data-months="6" data-rate="12.7">
+                    <span class="font-bold">6 Mo</span>
+                    <span class="text-[10px] opacity-80 mt-1">12.7% p.a.</span>
+                </button>
+                <button class="tenure-btn flex flex-col items-center justify-center p-3 rounded-xl border-2 border-gray-200 bg-white text-gray-500 transition-all" data-months="12" data-rate="14.0">
+                    <span class="font-bold">12 Mo</span>
+                    <span class="text-[10px] opacity-80 mt-1">14.0% p.a.</span>
+                </button>
+            </div>
+
+            <!-- Summary Card -->
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-8">
+                <h3 class="text-sm font-semibold text-gray-800 mb-4">Loan Summary</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Principal Amount</span>
+                        <span class="text-sm font-semibold text-gray-800" id="summary-principal">₹2,500</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Interest (<span id="summary-rate-label">11.5%</span> p.a.)</span>
+                        <span class="text-sm font-semibold text-gray-800" id="summary-interest">₹72</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Monthly EMI</span>
+                        <span class="text-sm font-bold text-blue-600" id="summary-emi">₹857</span>
+                    </div>
+                    <div class="h-px w-full bg-slate-200 my-2"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Total Repayable</span>
+                        <span class="text-base font-bold text-gray-900" id="summary-total">₹2,572</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="showConsentSheet()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-amber-500/30 active:scale-95 transition-all">
+                Apply Now
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ================== SCREEN 3: PROCESSING & RESULT ================== -->
+    <div id="processing-screen" class="screen bg-navy-900 text-white">
+        <div class="px-6 pt-16 flex flex-col items-center h-full">
+            
+            <!-- Step 1: Terminal Output (hidden after done) -->
+            <div id="terminal-container" class="w-full bg-black rounded-xl p-4 mb-8 shadow-inner border border-gray-800 min-h-[200px]">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="text-xs text-gray-500 ml-2 font-mono">Edge SDK v2.0</span>
+                </div>
+                <div id="terminal-output" class="terminal-text space-y-1">
+                    <!-- Logs appear here -->
+                </div>
+            </div>
+
+            <!-- Step 2: Waiting Card (hidden initially) -->
+            <div id="waiting-card" class="w-full bg-white/10 rounded-3xl p-6 backdrop-blur-md border border-white/20 hidden flex-col items-center text-center mt-10">
+                <div class="relative w-20 h-20 flex items-center justify-center mb-4 pulse-animation">
+                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center relative z-10">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Application Under Review</h3>
+                <p class="text-sm text-blue-200 mb-6">A bank officer will review your application shortly. Please do not close this app.</p>
+                
+                <div class="w-full bg-black/20 rounded-xl p-4 text-left mb-4">
+                    <p class="text-xs text-gray-400 mb-1">Application ID</p>
+                    <p class="font-mono text-sm font-semibold" id="wait-app-id">NEXUS-XXXXX</p>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-gray-300">
+                    <div class="loader"></div>
+                    <span>Polling server...</span>
+                </div>
+            </div>
+
+            <!-- Step 3: Result Card (hidden initially) -->
+            <div id="result-card" class="w-full bg-white rounded-3xl p-6 shadow-2xl hidden flex-col items-center text-center text-gray-900 mt-10 relative overflow-hidden">
+                <!-- Icon -->
+                <div id="result-icon-container" class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4 z-10">
+                    <svg id="result-icon-success" class="w-10 h-10 text-green-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    <svg id="result-icon-warning" class="w-10 h-10 text-yellow-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                
+                <h2 id="result-title" class="text-2xl font-bold mb-1 z-10">Loan Approved!</h2>
+                <p id="result-subtitle" class="text-sm text-gray-500 mb-6 z-10">Funds will be credited instantly.</p>
+
+                <div class="w-full bg-gray-50 rounded-xl p-4 text-left mb-6 border border-gray-100 z-10">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-sm text-gray-600 font-semibold">Trust Score</span>
+                        <span id="result-score" class="text-3xl font-bold text-green-600">820</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+                        <div id="result-score-bar" class="bg-green-500 h-2 rounded-full" style="width: 82%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-gray-400">
+                        <span>0</span>
+                        <span>Poor</span>
+                        <span>Fair</span>
+                        <span>Good</span>
+                        <span>Excellent</span>
+                        <span>1000</span>
+                    </div>
+                </div>
+
+                <div class="w-full text-left z-10">
+                    <h4 class="text-sm font-bold text-gray-800 mb-3">AI Decision Insights (XAI)</h4>
+                    <div id="xai-reasons-container" class="space-y-2">
+                        <!-- Reasons injected here -->
+                    </div>
+                </div>
+
+                <button onclick="navigateTo('home-screen')" class="w-full mt-8 bg-gray-900 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all z-10">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 w-full max-w-[430px] bg-white border-t border-gray-200 px-6 py-3 pb-6 flex justify-between items-center z-40 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <button class="flex flex-col items-center text-blue-600" onclick="navigateTo('home-screen')">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            <span class="text-[10px] font-medium">Home</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            <span class="text-[10px] font-medium">Cards</span>
+        </button>
+        <button class="relative -top-5">
+            <div class="w-14 h-14 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/40 border-4 border-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </div>
+            <span class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-[10px] font-medium text-gray-400">Scan</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span class="text-[10px] font-medium">Wealth</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400">
+            <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-[10px] font-medium">Profile</span>
+        </button>
+    </div>
+
+    <!-- DPDP Consent Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="consent-overlay"></div>
+    <div class="bottom-sheet" id="consent-sheet">
+        <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-900 text-lg">Permission Required</h3>
+                <p class="text-xs text-blue-600 font-semibold">FinEdge Privacy Engine</p>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100 text-sm text-gray-600 leading-relaxed">
+            <p class="mb-3">To offer an instant loan without a credit score, we analyze on-device data patterns securely using our Edge SDK.</p>
+            <p>Under the <strong>Digital Personal Data Protection (DPDP) Act, 2023</strong>, we require your explicit consent to process this data. Your raw personal data never leaves this device.</p>
+        </div>
+
+        <label class="flex items-start gap-3 mb-8 cursor-pointer group">
+            <div class="relative flex items-start pt-1">
+                <input type="checkbox" id="consent-checkbox" class="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+            </div>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                I voluntarily consent to on-device processing of my data to compute a mathematical vector for loan assessment under the DPDP Act.
+            </span>
+        </label>
+
+        <div class="flex gap-3">
+            <button onclick="hideConsentSheet()" class="flex-1 py-4 font-semibold text-gray-600 bg-gray-100 rounded-xl active:bg-gray-200">Cancel</button>
+            <button id="consent-accept-btn" disabled onclick="startProcessing()" class="flex-1 py-4 font-semibold text-white bg-blue-600 rounded-xl opacity-50 cursor-not-allowed transition-all">Accept & Continue</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Constants
+    const API_BASE = 'https://finedge-iy0i.onrender.com';
+    const API_KEY = 'VgWTv8f0.wAQoI2ip4sNX1yk9ZaU1Z4UXJkGVjL6N';
+    const HMAC_SECRET = 'finedge_hmac_shared_secret_2026';
+
+    // UI Navigation
+    function navigateTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        // Reset Processing Screen if leaving it
+        if(screenId === 'home-screen' || screenId === 'loan-screen') {
+            document.getElementById('terminal-container').style.display = 'block';
+            document.getElementById('terminal-output').innerHTML = '';
+            document.getElementById('waiting-card').classList.add('hidden');
+            document.getElementById('waiting-card').classList.remove('flex');
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('result-card').classList.remove('flex');
+        }
+    }
+
+    // Loan Calculator Logic
+    const slider = document.getElementById('loan-slider');
+    const amountInput = document.getElementById('loan-amount-input');
+    const summaryPrincipal = document.getElementById('summary-principal');
+    const summaryRateLabel = document.getElementById('summary-rate-label');
+    const summaryInterest = document.getElementById('summary-interest');
+    const summaryEmi = document.getElementById('summary-emi');
+    const summaryTotal = document.getElementById('summary-total');
+    let currentMonths = 3;
+    let currentRate = 11.5;
+
+    function calculateLoan() {
+        const principal = parseInt(slider.value);
+        amountInput.value = principal;
+        summaryPrincipal.innerText = '₹' + principal.toLocaleString();
+        summaryRateLabel.innerText = currentRate.toFixed(1) + '%';
+        
+        // Simple Interest for approximation: P * R * T / 100
+        const timeInYears = currentMonths / 12;
+        const totalInterest = Math.round((principal * currentRate * timeInYears) / 100);
+        const totalRepayable = principal + totalInterest;
+        const monthlyEmi = Math.round(totalRepayable / currentMonths);
+
+        summaryInterest.innerText = '₹' + totalInterest.toLocaleString();
+        summaryEmi.innerText = '₹' + monthlyEmi.toLocaleString();
+        summaryTotal.innerText = '₹' + totalRepayable.toLocaleString();
+    }
+
+    slider.addEventListener('input', calculateLoan);
+
+    document.querySelectorAll('.tenure-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.tenure-btn').forEach(b => {
+                b.classList.remove('active', 'border-blue-600', 'bg-blue-50', 'text-blue-700');
+                b.classList.add('border-gray-200', 'bg-white', 'text-gray-500');
+            });
+            const target = e.currentTarget;
+            target.classList.add('active', 'border-blue-600', 'bg-blue-50', 'text-blue-700');
+            target.classList.remove('border-gray-200', 'bg-white', 'text-gray-500');
+            
+            currentMonths = parseInt(target.getAttribute('data-months'));
+            currentRate = parseFloat(target.getAttribute('data-rate'));
+            calculateLoan();
+        });
+    });
+
+    // Initialize calculator
+    calculateLoan();
+
+    // Bottom Sheet Logic
+    const overlay = document.getElementById('consent-overlay');
+    const sheet = document.getElementById('consent-sheet');
+    const checkbox = document.getElementById('consent-checkbox');
+    const acceptBtn = document.getElementById('consent-accept-btn');
+
+    function showConsentSheet() {
+        overlay.classList.add('active');
+        sheet.classList.add('active');
+        checkbox.checked = false;
+        checkConsent();
+    }
+
+    function hideConsentSheet() {
+        overlay.classList.remove('active');
+        sheet.classList.remove('active');
+    }
+
+    function checkConsent() {
+        if(checkbox.checked) {
+            acceptBtn.removeAttribute('disabled');
+            acceptBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            acceptBtn.classList.add('active:scale-95', 'shadow-lg');
+        } else {
+            acceptBtn.setAttribute('disabled', 'true');
+            acceptBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            acceptBtn.classList.remove('active:scale-95', 'shadow-lg');
+        }
+    }
+    
+    checkbox.addEventListener('change', checkConsent);
+
+    // Crypto HMAC Utils
+    async function signPayload(secret, bodyStr) {
+        const enc = new TextEncoder();
+        const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+        const sig = await crypto.subtle.sign('HMAC', key, enc.encode(bodyStr));
+        return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Terminal log simulator
+    async function addTerminalLog(text, delayMs = 500) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const out = document.getElementById('terminal-output');
+                const p = document.createElement('p');
+                p.innerHTML = `> ${text}`;
+                out.appendChild(p);
+                out.scrollTop = out.scrollHeight;
+                resolve();
+            }, delayMs);
+        });
+    }
+
+    // Processing Flow
+    async function startProcessing() {
+        hideConsentSheet();
+        navigateTo('processing-screen');
+        
+        const amount = parseInt(slider.value);
+        
+        // Terminal UI simulation
+        await addTerminalLog('🔐 Initializing Edge SDK v2.0...', 300);
+        await addTerminalLog('📱 Collecting device fingerprint...', 600);
+        await addTerminalLog('🧠 Running behavioral analysis...', 700);
+        await addTerminalLog('📊 Computing mathematical vector...', 800);
+        
+        // Generate Payload
+        const vector = {
+            device_age_days: Math.floor(Math.random() * 700) + 30,
+            utility_sms_count: Math.floor(Math.random() * 60) + 5,
+            battery_deaths_weekly: Math.floor(Math.random() * 5),
+            saved_contacts_ratio: +(Math.random() * 0.8 + 0.1).toFixed(2),
+            financial_apps_count: Math.floor(Math.random() * 8) + 1,
+            average_monthly_balance: Math.floor(Math.random() * 80000) + 5000,
+            lifetime_emi_bounces: Math.floor(Math.random() * 4),
+        };
+
+        const rawDeviceStr = navigator.userAgent + Date.now().toString();
+        const device_hash_mask = await sha256(rawDeviceStr);
+        const tracking_reference = 'NEXUS-' + Date.now();
+
+        const payloadObj = {
+            device_hash_mask,
+            tracking_reference,
+            mathematical_vector: vector,
+            requested_amount: amount
+        };
+
+        const payloadStr = JSON.stringify(payloadObj);
+        const signature = await signPayload(HMAC_SECRET, payloadStr);
+
+        await addTerminalLog('🌐 Submitting to FinEdge API...', 500);
+
+        try {
+            const res = await fetch(`${API_BASE}/api/v1/score/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Api-Key ${API_KEY}`,
+                    'X-FinEdge-Signature': signature
+                },
+                body: payloadStr
+            });
+
+            if(res.status === 201) {
+                const data = await res.json();
+                const appId = data.application_id;
+                
+                await addTerminalLog('✅ Application submitted — waiting for officer review...', 500);
+                
+                // Show Waiting Card
+                setTimeout(() => {
+                    document.getElementById('terminal-container').style.display = 'none';
+                    const waitCard = document.getElementById('waiting-card');
+                    waitCard.classList.remove('hidden');
+                    waitCard.classList.add('flex');
+                    document.getElementById('wait-app-id').innerText = appId.substring(0, 13) + '...';
+                    
+                    // Start Polling
+                    startPolling(appId);
+                }, 1500);
+            } else {
+                await addTerminalLog(`<span class="text-red-500">❌ Error: Server returned ${res.status}</span>`, 500);
+            }
+        } catch(err) {
+            await addTerminalLog(`<span class="text-red-500">❌ Connection Error: ${err.message}</span>`, 500);
+        }
+    }
+
+    let pollInterval;
+    function startPolling(appId) {
+        if(pollInterval) clearInterval(pollInterval);
+        
+        pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/application/${appId}/status/`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Api-Key ${API_KEY}`
+                    }
+                });
+                
+                if(res.status === 200) {
+                    const data = await res.json();
+                    
+                    if(data.trust_score !== null) {
+                        clearInterval(pollInterval);
+                        showResult(data);
+                    }
+                }
+            } catch(e) {
+                console.error("Polling error", e);
+            }
+        }, 3000);
+    }
+
+    function showResult(data) {
+        document.getElementById('waiting-card').classList.add('hidden');
+        document.getElementById('waiting-card').classList.remove('flex');
+        
+        const resCard = document.getElementById('result-card');
+        resCard.classList.remove('hidden');
+        resCard.classList.add('flex');
+
+        const score = data.trust_score;
+        const reasons = data.xai_reasons || [];
+        
+        const titleEl = document.getElementById('result-title');
+        const subtitleEl = document.getElementById('result-subtitle');
+        const scoreEl = document.getElementById('result-score');
+        const scoreBarEl = document.getElementById('result-score-bar');
+        const iconContainer = document.getElementById('result-icon-container');
+        const iconSuccess = document.getElementById('result-icon-success');
+        const iconWarning = document.getElementById('result-icon-warning');
+        
+        // Reset styles
+        iconContainer.className = 'w-20 h-20 rounded-full flex items-center justify-center mb-4 z-10';
+        iconSuccess.classList.add('hidden');
+        iconWarning.classList.add('hidden');
+
+        scoreEl.innerText = score;
+        const percentage = Math.min(Math.max((score / 1000) * 100, 0), 100);
+        scoreBarEl.style.width = percentage + '%';
+
+        if(score >= 650) {
+            // Success
+            titleEl.innerText = 'Loan Approved! ✅';
+            titleEl.className = 'text-2xl font-bold mb-1 z-10 text-gray-900';
+            subtitleEl.innerText = 'Funds will be credited instantly.';
+            scoreEl.className = 'text-3xl font-bold text-green-600';
+            scoreBarEl.className = 'bg-green-500 h-2 rounded-full';
+            iconContainer.classList.add('bg-green-100');
+            iconSuccess.classList.remove('hidden');
+        } else {
+            // Warning
+            titleEl.innerText = 'Further Review Required';
+            titleEl.className = 'text-2xl font-bold mb-1 z-10 text-gray-900';
+            subtitleEl.innerText = 'An officer will contact you shortly.';
+            scoreEl.className = 'text-3xl font-bold text-yellow-600';
+            scoreBarEl.className = 'bg-yellow-500 h-2 rounded-full';
+            iconContainer.classList.add('bg-yellow-100');
+            iconWarning.classList.remove('hidden');
+        }
+
+        // Render XAI reasons
+        const reasonsContainer = document.getElementById('xai-reasons-container');
+        reasonsContainer.innerHTML = '';
+        
+        if(reasons.length > 0) {
+            reasons.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'flex items-start gap-2 bg-gray-50 p-2 rounded-lg';
+                
+                let icon = '';
+                if(r.impact === 'positive') icon = '<span class="text-green-500 mt-0.5">↑</span>';
+                else if(r.impact === 'negative') icon = '<span class="text-red-500 mt-0.5">↓</span>';
+                else icon = '<span class="text-gray-400 mt-0.5">-</span>';
+
+                div.innerHTML = `
+                    ${icon}
+                    <div>
+                        <p class="text-xs font-semibold text-gray-800">${r.feature.replace(/_/g, ' ')}</p>
+                        <p class="text-[10px] text-gray-500">${r.description}</p>
+                    </div>
+                `;
+                reasonsContainer.appendChild(div);
+            });
+        } else {
+            reasonsContainer.innerHTML = '<p class="text-xs text-gray-500">No specific insights available.</p>';
+        }
+    }
+
+</script>
+</body>
+</html>

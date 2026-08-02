@@ -20,7 +20,10 @@ urlpatterns = [
     path("v1/trigger_score/<str:application_id>/", views.trigger_trust_score, name="trigger_trust_score"),
     path("v1/application/<str:application_id>/status/", views.application_status_check, name="application_status_check"),
 
-    # Dashboards
+    # Dashboards (Server-rendered Django templates)
     path("dashboard/admin/", dashboard_views.admin_dashboard, name="admin_dashboard"),
     path("dashboard/officer/<str:tenant_code>/", dashboard_views.officer_dashboard, name="officer_dashboard"),
+
+    # JSON API for Vercel static frontend
+    path("officer/<str:tenant_code>/applications/", dashboard_views.officer_api_applications, name="officer_api_applications"),
 ]

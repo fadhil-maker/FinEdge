@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Dashboard — NexusBank | FinEdge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: '#00e5a0',
+                        dark: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .xai-panel {
+            display: none;
+        }
+        .xai-panel.open {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #00e5a0;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .toast {
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toast.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 lg:p-8">
+
+    <!-- Navbar -->
+    <nav class="glass-card rounded-2xl p-4 mb-8 flex flex-col md:flex-row justify-between items-center sticky top-4 z-50">
+        <div class="flex items-center space-x-3 mb-4 md:mb-0">
+            <div class="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center border border-brand/30">
+                <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">FinEdge <span class="text-slate-400 font-normal">| Officer Dashboard</span></h1>
+                <p class="text-sm text-slate-400" id="bank-name">NexusBank</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+            <div class="flex items-center space-x-2 bg-dark-900/50 px-3 py-1.5 rounded-full border border-slate-700/50">
+                <div class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-brand"></span>
+                </div>
+                <span class="text-xs font-medium text-brand uppercase tracking-wider">Live</span>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-slate-300">Auto-refresh</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="auto-refresh-toggle" class="sr-only peer" checked>
+                    <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <!-- KPI Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="glass-card rounded-xl p-5 flex items-center space-x-4">
+            <div class="p-3 bg-blue-500/10 rounded-lg text-blue-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm text-slate-400 font-medium">Total Applications</p>
+                <h3 class="text-2xl font-bold" id="kpi-total">-</h3>
+            </div>
+        </div>
+        <div class="glass-card rounded-xl p-5 flex items-center space-x-4">
+            <div class="p-3 bg-brand/10 rounded-lg text-brand">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm text-slate-400 font-medium">Avg Trust Score</p>
+                <h3 class="text-2xl font-bold" id="kpi-avg-score">-</h3>
+            </div>
+        </div>
+        <div class="glass-card rounded-xl p-5 flex items-center space-x-4">
+            <div class="p-3 bg-emerald-500/10 rounded-lg text-emerald-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm text-slate-400 font-medium">Approved</p>
+                <h3 class="text-2xl font-bold" id="kpi-approved">-</h3>
+            </div>
+        </div>
+        <div class="glass-card rounded-xl p-5 flex items-center space-x-4">
+            <div class="p-3 bg-amber-500/10 rounded-lg text-amber-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm text-slate-400 font-medium">API Revenue (₹)</p>
+                <h3 class="text-2xl font-bold" id="kpi-revenue">-</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="mb-4 flex justify-between items-end">
+        <h2 class="text-xl font-semibold text-slate-200">Recent Applications</h2>
+        <span class="text-sm text-slate-400" id="last-updated">Last updated: Just now</span>
+    </div>
+
+    <div class="space-y-4" id="applications-container">
+        <!-- Application Cards will be injected here -->
+        <div class="text-center py-12 text-slate-400">Loading applications...</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast fixed bottom-4 right-4 glass-card border-brand/50 rounded-lg p-4 flex items-center space-x-3 z-50">
+        <div class="bg-brand/20 p-2 rounded-full text-brand">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+        </div>
+        <div>
+            <h4 class="text-sm font-semibold text-white">New Applications</h4>
+            <p class="text-xs text-slate-300">The dashboard has been updated.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://finedge-iy0i.onrender.com';
+        const TENANT_CODE = 'nexus';
+        let applicationsData = [];
+        let previousAppIds = new Set();
+        let refreshInterval;
+
+        const featureNameMap = {
+            'device_age_days': 'Device Age (Days)',
+            'utility_sms_count': 'UPI/Banking SMS Count',
+            'battery_deaths_weekly': 'Battery Deaths (Weekly)',
+            'saved_contacts_ratio': 'Saved Contacts Ratio',
+            'financial_apps_count': 'Financial Apps Count',
+            'average_monthly_balance': 'Avg Monthly Balance (₹)',
+            'lifetime_emi_bounces': 'Lifetime EMI Bounces'
+        };
+
+        function timeSince(dateString) {
+            if (!dateString) return 'Unknown';
+            const date = new Date(dateString);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " mins ago";
+            return Math.floor(seconds) + " secs ago";
+        }
+
+        function formatCurrency(amount) {
+            if (amount === null || amount === undefined) return '₹0';
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+        }
+
+        function truncateUUID(uuid) {
+            if (!uuid) return '';
+            return uuid.split('-')[0] + '...';
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function getStatusColor(statusRaw) {
+            switch(statusRaw) {
+                case 'SDK_RECEIVED': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                case 'SCORE_COMPUTED': return 'text-green-400 bg-green-500/10 border-green-500/20';
+                case 'FALLBACK_REVIEW': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+                default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+            }
+        }
+
+        function getScoreColor(score) {
+            if (!score) return 'text-slate-400';
+            if (score >= 700) return 'text-emerald-400';
+            if (score >= 600) return 'text-amber-400';
+            return 'text-red-400';
+        }
+
+        function toggleXAI(id) {
+            const panel = document.getElementById(`xai-${id}`);
+            const icon = document.getElementById(`chevron-${id}`);
+            if (panel.classList.contains('open')) {
+                panel.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                panel.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        async function triggerScore(appId, event) {
+            event.stopPropagation();
+            const btn = document.getElementById(`btn-${appId}`);
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner mr-2"></div> Scoring...`;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/trigger_score/${appId}/`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    await fetchDashboardData();
+                } else {
+                    btn.innerHTML = `Error`;
+                    btn.classList.add('bg-red-500/20', 'text-red-400');
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = `Run FinEdge Score 🧠`;
+                        btn.classList.remove('bg-red-500/20', 'text-red-400');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error("Error triggering score:", error);
+                btn.disabled = false;
+                btn.innerHTML = `Run FinEdge Score 🧠`;
+            }
+        }
+
+        function renderApplications(apps) {
+            const container = document.getElementById('applications-container');
+            if (!apps || apps.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-slate-400 bg-dark-800/50 rounded-xl border border-slate-700/50">No applications found.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            apps.forEach(app => {
+                const isScored = app.trust_score !== null;
+                const unscoredClass = !isScored ? 'border-brand/30 shadow-[0_0_15px_rgba(0,229,160,0.1)]' : 'border-slate-700/50';
+                
+                const card = document.createElement('div');
+                card.className = `glass-card rounded-xl border ${unscoredClass} overflow-hidden transition-all duration-300 hover:border-slate-500`;
+                
+                // Card Header/Main content
+                let mainHtml = `
+                    <div class="p-5 cursor-pointer flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4" onclick="toggleXAI('${app.id}')">
+                        <!-- Left Section -->
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <span class="font-mono text-xs text-slate-400 bg-dark-900 px-2 py-1 rounded border border-slate-700">${truncateUUID(app.id)}</span>
+                                <span class="text-sm font-semibold text-white">${app.tracking_reference}</span>
+                                <span class="text-xs text-slate-400 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    ${timeSince(app.created_at)}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.current_step_raw)}">
+                                    ${app.current_step}
+                                </span>
+                                ${app.is_thin_file ? '<span class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Thin File</span>' : ''}
+                            </div>
+                        </div>
+
+                        <!-- Center Section -->
+                        <div class="flex-1 flex justify-start lg:justify-center items-center space-x-8">
+                            <div class="text-left lg:text-center">
+                                <p class="text-xs text-slate-400 mb-1">Requested Amount</p>
+                                <p class="text-lg font-bold text-white">${formatCurrency(app.requested_amount)}</p>
+                            </div>
+                            
+                            ${isScored ? `
+                            <div class="flex items-center space-x-4">
+                                <div class="relative w-16 h-16 flex items-center justify-center rounded-full border-4 ${app.trust_score >= 700 ? 'border-emerald-500/20' : (app.trust_score >= 600 ? 'border-amber-500/20' : 'border-red-500/20')}">
+                                    <span class="text-xl font-bold ${getScoreColor(app.trust_score)}">${app.trust_score}</span>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs text-slate-400 mb-1">Default Prob.</p>
+                                    <p class="text-sm font-semibold ${app.default_probability > 0.5 ? 'text-red-400' : 'text-slate-200'}">${app.default_probability ? (app.default_probability * 100).toFixed(1) + '%' : 'N/A'}</p>
+                                </div>
+                            </div>
+                            ` : `
+                            <div class="text-slate-500 text-sm italic">Not scored yet</div>
+                            `}
+                        </div>
+
+                        <!-- Right Section -->
+                        <div class="flex-1 flex justify-end items-center space-x-4 w-full lg:w-auto">
+                            ${!isScored ? `
+                                <button id="btn-${app.id}" onclick="triggerScore('${app.id}', event)" class="w-full lg:w-auto flex items-center justify-center px-4 py-2 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/30 rounded-lg text-sm font-semibold transition-colors duration-200 shadow-[0_0_10px_rgba(0,229,160,0.1)]">
+                                    Run FinEdge Score 🧠
+                                </button>
+                            ` : `
+                                <div class="hidden lg:block w-[180px]"></div>
+                            `}
+                            <div class="p-2 text-slate-400 hover:text-white transition-colors">
+                                <svg id="chevron-${app.id}" class="w-5 h-5 transform transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // XAI Panel
+                let vectorRows = '';
+                if (app.mathematical_vector) {
+                    for (const [key, value] of Object.entries(app.mathematical_vector)) {
+                        const name = featureNameMap[key] || key;
+                        vectorRows += `
+                            <div class="flex justify-between items-center py-2 border-b border-slate-700/50 last:border-0">
+                                <span class="text-sm text-slate-400">${name}</span>
+                                <span class="text-sm font-mono text-white">${value}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                let xaiRows = '';
+                if (app.xai_reasons && app.xai_reasons.length > 0) {
+                    app.xai_reasons.forEach(reason => {
+                        let bgClass = 'bg-slate-800 border-slate-700';
+                        if (reason.impact === 'positive') bgClass = 'bg-emerald-900/30 border-emerald-500/20 text-emerald-100';
+                        if (reason.impact === 'negative') bgClass = 'bg-red-900/30 border-red-500/20 text-red-100';
+                        
+                        xaiRows += `
+                            <div class="flex items-start p-3 rounded-lg border ${bgClass} mb-2 last:mb-0">
+                                <span class="text-xl mr-3">${reason.icon || '📌'}</span>
+                                <div>
+                                    <p class="text-sm font-medium mb-1">${reason.reason}</p>
+                                    <p class="text-xs opacity-70 font-mono">${featureNameMap[reason.feature] || reason.feature}: ${reason.value}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    xaiRows = '<p class="text-sm text-slate-500 italic">No explainability data available.</p>';
+                }
+
+                let badgeHtml = '';
+                if (app.decision_badge) {
+                    let badgeColor = app.decision_badge.color || 'slate';
+                    let badgeClasses = `bg-${badgeColor}-500/10 text-${badgeColor}-400 border-${badgeColor}-500/30`;
+                    
+                    // tailwind JIT might not catch dynamic class names if not configured properly, let's map safely:
+                    if(badgeColor === 'green' || badgeColor === 'emerald') badgeClasses = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+                    else if(badgeColor === 'red') badgeClasses = 'bg-red-500/10 text-red-400 border-red-500/30';
+                    else if(badgeColor === 'amber' || badgeColor === 'yellow') badgeClasses = 'bg-amber-500/10 text-amber-400 border-amber-500/30';
+                    else if(badgeColor === 'blue') badgeClasses = 'bg-blue-500/10 text-blue-400 border-blue-500/30';
+
+                    badgeHtml = `
+                        <div class="mb-6 p-4 rounded-xl border ${badgeClasses} flex items-center justify-center space-x-3 backdrop-blur-sm">
+                            <span class="text-2xl">${app.decision_badge.icon || ''}</span>
+                            <span class="text-lg font-semibold tracking-wide">${app.decision_badge.label}</span>
+                        </div>
+                    `;
+                }
+
+                let xaiHtml = `
+                    <div id="xai-${app.id}" class="xai-panel bg-dark-900/50 border-t border-slate-700/50 p-5 lg:p-6">
+                        ${badgeHtml}
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    Extracted Features
+                                </h4>
+                                <div class="bg-dark-800 rounded-lg p-4 border border-slate-700/50">
+                                    ${vectorRows || '<p class="text-sm text-slate-500">Vector data not found.</p>'}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Edge-ML Explainability
+                                </h4>
+                                <div>
+                                    ${xaiRows}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                card.innerHTML = mainHtml + xaiHtml;
+                container.appendChild(card);
+            });
+        }
+
+        function updateKPIs(stats) {
+            if (!stats) return;
+            document.getElementById('kpi-total').innerText = stats.total_apps || 0;
+            document.getElementById('kpi-avg-score').innerText = stats.avg_score ? Math.round(stats.avg_score) : '-';
+            document.getElementById('kpi-approved').innerText = stats.approval_count || 0;
+            document.getElementById('kpi-revenue').innerText = formatCurrency(stats.tenant_revenue);
+        }
+
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/officer/${TENANT_CODE}/applications/`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                
+                if (data.bank) {
+                    document.getElementById('bank-name').innerText = data.bank.name || 'NexusBank';
+                }
+                
+                updateKPIs(data.stats);
+                
+                if (data.applications) {
+                    // Check for new applications to show toast
+                    const currentAppIds = new Set(data.applications.map(a => a.id));
+                    if (previousAppIds.size > 0) {
+                        const newApps = [...currentAppIds].filter(id => !previousAppIds.has(id));
+                        if (newApps.length > 0) {
+                            showToast();
+                        }
+                    }
+                    previousAppIds = currentAppIds;
+                    
+                    renderApplications(data.applications);
+                }
+
+                document.getElementById('last-updated').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const isChecked = document.getElementById('auto-refresh-toggle').checked;
+            if (isChecked) {
+                refreshInterval = setInterval(fetchDashboardData, 5000);
+            } else {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        document.getElementById('auto-refresh-toggle').addEventListener('change', toggleAutoRefresh);
+
+        // Initial load
+        fetchDashboardData();
+        // Start polling
+        refreshInterval = setInterval(fetchDashboardData, 5000);
+
+    </script>
+</body>
+</html>

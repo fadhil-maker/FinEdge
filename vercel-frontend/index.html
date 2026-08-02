@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinEdge | Privacy-Preserving AI Credit Scoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    },
+                    colors: {
+                        finedge: {
+                            green: '#00e5a0',
+                            blue: '#3b82f6',
+                            dark: '#0a0a0a',
+                            gray: '#111827',
+                            card: 'rgba(255, 255, 255, 0.03)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #111827 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #00e5a0 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #00e5a0 0%, #3b82f6 100%);
+        }
+        
+        .bg-gradient-primary:hover {
+            background: linear-gradient(135deg, #00c98c 0%, #2563eb 100%);
+            box-shadow: 0 0 20px rgba(0, 229, 160, 0.3);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        .arrow-down {
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), #00e5a0);
+            margin: 0 auto;
+        }
+
+        .arrow-right {
+            height: 2px;
+            width: 40px;
+            background: linear-gradient(to right, rgba(255,255,255,0.1), #00e5a0);
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 10px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: left;
+        }
+        th {
+            background: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            color: #9ca3af;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden selection:bg-finedge-green selection:text-black">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 glass border-b-0 border-t-0 border-x-0 border-b-[1px] border-white/10 top-0 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <span class="text-2xl font-bold tracking-tight">Fin<span class="text-finedge-green">Edge</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#features" class="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">Features</a>
+                        <a href="#how-it-works" class="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">How It Works</a>
+                        <a href="#architecture" class="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">Architecture</a>
+                        <a href="#demo" class="text-gray-300 hover:text-white transition-colors px-3 py-2 rounded-md text-sm font-medium">Demo</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="./app/" class="bg-gradient-primary text-white px-6 py-2.5 rounded-full font-medium text-sm transition-all shadow-lg hover:shadow-finedge-green/20">Try Live Demo &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-finedge-green/20 rounded-full blur-[128px]"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-finedge-blue/20 rounded-full blur-[128px]"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center reveal">
+            <div class="inline-flex items-center px-4 py-1.5 rounded-full glass border-finedge-green/30 mb-8">
+                <span class="flex h-2 w-2 rounded-full bg-finedge-green mr-2 animate-pulse"></span>
+                <span class="text-xs font-semibold uppercase tracking-wider text-finedge-green">🔒 DPDP Act 2023 Compliant</span>
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                AI Credit Scoring that <br class="hidden md:block" />
+                <span class="text-gradient">Respects Privacy</span>
+            </h1>
+            
+            <p class="mt-4 text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 font-light leading-relaxed">
+                Privacy-preserving, on-device Edge ML credit assessment for India's 300M+ unbanked population. No raw data ever leaves the device.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+                <a href="./app/" class="bg-gradient-primary text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-lg hover:shadow-finedge-green/30 flex items-center justify-center">
+                    Launch User Demo &rarr;
+                </a>
+                <a href="./officer/" class="glass text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white/10 transition-all border border-white/20 flex items-center justify-center">
+                    Open Officer Dashboard &rarr;
+                </a>
+            </div>
+            
+            <div class="max-w-3xl mx-auto text-left reveal delay-200">
+                <div class="glass rounded-xl overflow-hidden shadow-2xl border-white/10">
+                    <div class="flex items-center px-4 py-2 border-b border-white/10 bg-black/40">
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <span class="ml-4 text-xs text-gray-400 font-mono">POST /api/v1/score/</span>
+                    </div>
+                    <div class="p-6 bg-black/60 overflow-x-auto">
+<pre class="font-mono text-sm text-gray-300 leading-relaxed"><code><span class="text-finedge-green">curl</span> -X POST /api/v1/score/ \
+  -H <span class="text-yellow-300">'Authorization: Api-Key &lt;KEY&gt;'</span> \
+  -H <span class="text-yellow-300">'X-FinEdge-Signature: &lt;HMAC&gt;'</span> \
+  -d <span class="text-finedge-blue">'{"mathematical_vector": {"device_age_days": 450, "utility_sms_count": 12, "battery_deaths_weekly": 1, "saved_contacts_ratio": 0.85, "financial_apps_count": 3, "average_monthly_balance": 5000, "lifetime_emi_bounces": 0}}'</span></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Statement Section -->
+    <section class="py-20 bg-black/20 border-y border-white/5 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">The Problem We Solve</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">Traditional credit bureaus rely on historical loan data, leaving millions outside the formal financial system.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="glass p-8 rounded-2xl reveal">
+                    <div class="text-5xl font-black text-gradient mb-4">300M+</div>
+                    <h3 class="text-xl font-semibold mb-2">Unbanked Indians</h3>
+                    <p class="text-gray-400 text-sm">Lack formal credit history to access mainstream financial products.</p>
+                </div>
+                <div class="glass p-8 rounded-2xl reveal delay-100">
+                    <div class="text-5xl font-black text-gradient mb-4">₹3.5T</div>
+                    <h3 class="text-xl font-semibold mb-2">Addressable Market</h3>
+                    <p class="text-gray-400 text-sm">Micro-lending opportunity unlocked through alternative scoring.</p>
+                </div>
+                <div class="glass p-8 rounded-2xl reveal delay-200">
+                    <div class="text-5xl font-black text-gradient mb-4">80%</div>
+                    <h3 class="text-xl font-semibold mb-2">Rejection Rate</h3>
+                    <p class="text-gray-400 text-sm">For thin-file borrowers using traditional underwriting methods.</p>
+                </div>
+            </div>
+            
+            <div class="mt-16 glass p-8 rounded-2xl text-center reveal max-w-4xl mx-auto">
+                <p class="text-lg text-gray-300 leading-relaxed">
+                    FinEdge bridges this gap by turning the borrower's smartphone into a secure assessment tool. By analyzing alternative data sources—like device metadata, utility SMS counts, and behavioral patterns—we generate a reliable trust score. Crucially, all feature extraction happens <strong class="text-white">on the device</strong>. Only an anonymized mathematical vector is sent to our servers, ensuring total privacy.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Features Section -->
+    <section id="features" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Enterprise-Grade Features</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">Built for scale, security, and compliance from day one.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal">
+                    <div class="w-12 h-12 rounded-lg bg-finedge-green/20 flex items-center justify-center mb-6 border border-finedge-green/30">
+                        <svg class="w-6 h-6 text-finedge-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">On-Device Feature Extraction</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Edge SDK collects behavioral & transactional signals locally on the user's smartphone without sending raw data over the network.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal delay-100">
+                    <div class="w-12 h-12 rounded-lg bg-finedge-blue/20 flex items-center justify-center mb-6 border border-finedge-blue/30">
+                        <svg class="w-6 h-6 text-finedge-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Privacy-First Architecture</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Raw SMS, contacts, and app data never leave the device. Compliant with the strictest data protection laws including the DPDP Act 2023.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal delay-200">
+                    <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center mb-6 border border-purple-500/30">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">XGBoost ML Scoring</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Production-ready ML model assessing risk using a 7-feature mathematical vector, trained on thousands of diverse borrower profiles.</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal">
+                    <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mb-6 border border-orange-500/30">
+                        <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Explainable AI (XAI)</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Feature-level impact analysis for every credit decision. Know exactly why a score was assigned with positive and negative signal breakdowns.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal delay-100">
+                    <div class="w-12 h-12 rounded-lg bg-teal-500/20 flex items-center justify-center mb-6 border border-teal-500/30">
+                        <svg class="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Multi-Tenant B2B SaaS</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Tenant isolation, secure API key authentication, and HMAC signature verification ensure your institution's data remains segregated and safe.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="glass glass-hover p-8 rounded-2xl reveal delay-200">
+                    <div class="w-12 h-12 rounded-lg bg-pink-500/20 flex items-center justify-center mb-6 border border-pink-500/30">
+                        <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">Usage-Based Billing</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">Transparent ₹10 per API call metered billing. Pay only for the assessments you process, complete with detailed audit trails and reporting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-24 bg-black/20 border-y border-white/5 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">Seamless integration from SDK to Server</p>
+            </div>
+            
+            <div class="relative">
+                <!-- Connecting line for desktop -->
+                <div class="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-finedge-green/50 to-transparent -translate-y-1/2 z-0"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+                    <!-- Step 1 -->
+                    <div class="glass p-6 rounded-2xl text-center relative reveal">
+                        <div class="w-10 h-10 rounded-full bg-black border-2 border-finedge-green text-finedge-green flex items-center justify-center font-bold text-lg mx-auto mb-6 relative z-10 shadow-[0_0_15px_rgba(0,229,160,0.4)]">1</div>
+                        <h4 class="text-lg font-bold mb-2">SDK Integration</h4>
+                        <p class="text-gray-400 text-sm">Partner bank integrates FinEdge SDK into their mobile application.</p>
+                    </div>
+                    
+                    <!-- Step 2 -->
+                    <div class="glass p-6 rounded-2xl text-center relative reveal delay-100">
+                        <div class="w-10 h-10 rounded-full bg-black border-2 border-finedge-green text-finedge-green flex items-center justify-center font-bold text-lg mx-auto mb-6 relative z-10 shadow-[0_0_15px_rgba(0,229,160,0.4)]">2</div>
+                        <h4 class="text-lg font-bold mb-2">On-Device Analysis</h4>
+                        <p class="text-gray-400 text-sm">SDK extracts features from device signals completely offline.</p>
+                    </div>
+                    
+                    <!-- Step 3 -->
+                    <div class="glass p-6 rounded-2xl text-center relative reveal delay-200">
+                        <div class="w-10 h-10 rounded-full bg-black border-2 border-finedge-blue text-finedge-blue flex items-center justify-center font-bold text-lg mx-auto mb-6 relative z-10 shadow-[0_0_15px_rgba(59,130,246,0.4)]">3</div>
+                        <h4 class="text-lg font-bold mb-2">Secure Scoring</h4>
+                        <p class="text-gray-400 text-sm">Anonymized mathematical vector sent to ML backend via HMAC API.</p>
+                    </div>
+                    
+                    <!-- Step 4 -->
+                    <div class="glass p-6 rounded-2xl text-center relative reveal delay-300">
+                        <div class="w-10 h-10 rounded-full bg-black border-2 border-finedge-blue text-finedge-blue flex items-center justify-center font-bold text-lg mx-auto mb-6 relative z-10 shadow-[0_0_15px_rgba(59,130,246,0.4)]">4</div>
+                        <h4 class="text-lg font-bold mb-2">Instant Decision</h4>
+                        <p class="text-gray-400 text-sm">Trust score + XAI explanation returned to the dashboard.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="py-24 relative z-10">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">System Architecture</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">A robust, scalable pipeline protecting data at every step.</p>
+            </div>
+            
+            <div class="glass p-8 md:p-12 rounded-3xl reveal border border-white/10 shadow-2xl overflow-x-auto">
+                <div class="min-w-[800px] flex flex-col items-center">
+                    
+                    <!-- Client Layer -->
+                    <div class="flex items-center space-x-6 w-full justify-center">
+                        <div class="w-48 p-4 rounded-xl border border-white/20 bg-white/5 text-center shadow-lg relative group hover:bg-white/10 transition-all">
+                            <div class="absolute -top-3 -left-3 bg-finedge-green text-black text-xs font-bold px-2 py-1 rounded">CLIENT</div>
+                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            <h5 class="font-bold">Edge Device</h5>
+                            <p class="text-xs text-gray-400 mt-1">Partner App</p>
+                        </div>
+                        
+                        <div class="arrow-right"></div>
+                        
+                        <div class="w-48 p-4 rounded-xl border border-finedge-green/50 bg-finedge-green/10 text-center shadow-[0_0_20px_rgba(0,229,160,0.15)] hover:bg-finedge-green/20 transition-all">
+                            <svg class="w-8 h-8 mx-auto mb-2 text-finedge-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            <h5 class="font-bold text-finedge-green">FinEdge SDK</h5>
+                            <p class="text-xs text-gray-400 mt-1">Feature Extraction</p>
+                        </div>
+                        
+                        <div class="arrow-right"></div>
+                        
+                        <div class="w-48 p-4 rounded-xl border border-yellow-500/50 bg-yellow-500/10 text-center shadow-lg hover:bg-yellow-500/20 transition-all">
+                            <svg class="w-8 h-8 mx-auto mb-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            <h5 class="font-bold text-yellow-400">HMAC-Signed API</h5>
+                            <p class="text-xs text-gray-400 mt-1">Secure Transport</p>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow-down"></div>
+                    
+                    <!-- Backend Layer -->
+                    <div class="w-full flex justify-center">
+                        <div class="w-64 p-5 rounded-xl border border-finedge-blue/50 bg-finedge-blue/10 text-center shadow-[0_0_20px_rgba(59,130,246,0.15)] relative group hover:bg-finedge-blue/20 transition-all">
+                            <div class="absolute -top-3 -left-3 bg-finedge-blue text-white text-xs font-bold px-2 py-1 rounded">SERVER</div>
+                            <svg class="w-8 h-8 mx-auto mb-2 text-finedge-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                            <h5 class="font-bold text-xl text-white">Django Backend</h5>
+                            <p class="text-xs text-gray-400 mt-1">Core API & Routing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow-down"></div>
+                    
+                    <!-- Services Layer -->
+                    <div class="flex items-start space-x-6 w-full justify-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-40 p-4 rounded-xl border border-purple-500/40 bg-purple-500/10 text-center hover:bg-purple-500/20 transition-all">
+                                <h5 class="font-bold text-purple-400 text-sm">XGBoost Model</h5>
+                                <p class="text-[10px] text-gray-400 mt-1">Inference Engine</p>
+                            </div>
+                            <div class="arrow-down !h-6"></div>
+                            <div class="w-40 p-3 rounded-xl bg-white/10 text-center text-sm font-bold border border-white/20">
+                                TrustScore + XAI
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col items-center mt-8">
+                            <div class="w-40 p-4 rounded-xl border border-blue-400/40 bg-blue-400/10 text-center hover:bg-blue-400/20 transition-all">
+                                <h5 class="font-bold text-blue-400 text-sm">Officer Dashboard</h5>
+                                <p class="text-[10px] text-gray-400 mt-1">Web Portal</p>
+                            </div>
+                            <div class="arrow-down !h-6"></div>
+                            <div class="w-40 p-3 rounded-xl bg-white/10 text-center text-sm font-bold border border-white/20">
+                                Approve / Reject
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col items-center mt-16">
+                            <div class="w-40 p-4 rounded-xl border border-green-500/40 bg-green-500/10 text-center hover:bg-green-500/20 transition-all">
+                                <h5 class="font-bold text-green-400 text-sm">Billing Ledger</h5>
+                                <p class="text-[10px] text-gray-400 mt-1">PostgreSQL</p>
+                            </div>
+                            <div class="arrow-down !h-6"></div>
+                            <div class="w-40 p-3 rounded-xl bg-white/10 text-center text-sm font-bold border border-white/20">
+                                Metered Revenue
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Sources Table Section -->
+    <section class="py-20 bg-black/20 border-y border-white/5 relative z-10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 reveal">
+                <h2 class="text-3xl font-bold mb-4">Alternative Data Sources</h2>
+                <p class="text-gray-400">The 7-feature mathematical vector that powers our model.</p>
+            </div>
+            
+            <div class="glass rounded-2xl overflow-hidden reveal delay-100">
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data Source</th>
+                                <th>Feature Vector Name</th>
+                                <th>Predictive Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm md:text-base text-gray-300">
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg> Device Metadata</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">device_age_days</td>
+                                <td>Indicates ownership stability and disposable income</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg> SMS Analysis</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">utility_sms_count</td>
+                                <td>Validates consistent banking and utility payment activity</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Battery Patterns</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">battery_deaths_weekly</td>
+                                <td>Proxy for device quality and user routine consistency</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Contacts Graph</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">saved_contacts_ratio</td>
+                                <td>Measures social stability and community integration</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> App Ecosystem</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">financial_apps_count</td>
+                                <td>Indicates digital financial awareness and literacy</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Banking Signals</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">average_monthly_balance</td>
+                                <td>Evaluates baseline cash reserves and liquidity</td>
+                            </tr>
+                            <tr>
+                                <td class="font-medium text-white flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Repayment History</td>
+                                <td class="font-mono text-finedge-green text-xs md:text-sm">lifetime_emi_bounces</td>
+                                <td>Direct indicator of past credit discipline</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Demo Section -->
+    <section id="demo" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-lg">Experience both sides of the FinEdge platform.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- User App Card -->
+                <div class="glass rounded-3xl p-8 flex flex-col items-center text-center reveal border border-finedge-green/20 hover:border-finedge-green/50 transition-colors">
+                    <div class="w-20 h-20 bg-finedge-green/10 rounded-full flex items-center justify-center mb-6">
+                        <svg class="w-10 h-10 text-finedge-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">User Mobile App</h3>
+                    <p class="text-gray-400 mb-8 flex-grow">Experience the streamlined, privacy-first onboarding process. See how the SDK requests minimal permissions and generates a score on-device without exposing raw data.</p>
+                    
+                    <div class="w-full h-48 bg-black/40 rounded-xl border border-white/5 mb-8 flex items-center justify-center overflow-hidden relative">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                        <div class="text-xs text-gray-500 font-mono text-left w-full h-full p-4 opacity-50">
+                            > Initializing FinEdge SDK...<br>
+                            > Requesting minimal permissions<br>
+                            > Extracting device_age_days: DONE<br>
+                            > Parsing SMS headers: DONE<br>
+                            > Computing local trust vector<br>
+                            > Generating HMAC signature<br>
+                            > POST /score... 200 OK<br>
+                        </div>
+                    </div>
+                    
+                    <a href="./app/" class="w-full bg-gradient-primary text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-finedge-green/30 transition-all block">
+                        Launch Demo &rarr;
+                    </a>
+                </div>
+                
+                <!-- Officer Dashboard Card -->
+                <div class="glass rounded-3xl p-8 flex flex-col items-center text-center reveal delay-100 border border-finedge-blue/20 hover:border-finedge-blue/50 transition-colors">
+                    <div class="w-20 h-20 bg-finedge-blue/10 rounded-full flex items-center justify-center mb-6">
+                        <svg class="w-10 h-10 text-finedge-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Officer Dashboard</h3>
+                    <p class="text-gray-400 mb-8 flex-grow">Access the loan officer portal to review applications, view AI-generated TrustScores, and understand the Explainable AI (XAI) breakdown of each decision.</p>
+                    
+                    <div class="w-full h-48 bg-black/40 rounded-xl border border-white/5 mb-8 p-4 flex flex-col justify-center items-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                        <div class="flex space-x-4 w-full justify-center opacity-60">
+                            <div class="h-24 w-8 bg-finedge-green rounded-t-sm mt-4"></div>
+                            <div class="h-28 w-8 bg-finedge-green rounded-t-sm"></div>
+                            <div class="h-16 w-8 bg-red-400 rounded-t-sm mt-12"></div>
+                            <div class="h-20 w-8 bg-finedge-green rounded-t-sm mt-8"></div>
+                        </div>
+                        <div class="w-full h-px bg-white/20 mt-2"></div>
+                    </div>
+                    
+                    <a href="./officer/" class="w-full glass bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-bold text-lg border border-white/20 transition-all block">
+                        Open Dashboard &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Section -->
+    <section class="py-20 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl font-bold mb-4 text-gradient">Driving Financial Inclusion</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass p-6 rounded-2xl text-center reveal">
+                    <div class="text-4xl mb-4">🌍</div>
+                    <h3 class="font-semibold">Increase Financial Inclusion</h3>
+                </div>
+                <div class="glass p-6 rounded-2xl text-center reveal delay-100">
+                    <div class="text-4xl mb-4">💳</div>
+                    <h3 class="font-semibold">Improve Access to Formal Credit</h3>
+                </div>
+                <div class="glass p-6 rounded-2xl text-center reveal delay-200">
+                    <div class="text-4xl mb-4">🏠</div>
+                    <h3 class="font-semibold">Reduce Dependence on Informal Lenders</h3>
+                </div>
+                <div class="glass p-6 rounded-2xl text-center reveal delay-300">
+                    <div class="text-4xl mb-4">💪</div>
+                    <h3 class="font-semibold">Support Economic Empowerment</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="py-16 bg-black/40 border-y border-white/5 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
+            <h3 class="text-sm uppercase tracking-widest text-gray-500 font-semibold mb-8">Powered By Modern Tech Stack</h3>
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">Python</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">Django</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">XGBoost</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">PostgreSQL</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">Tailwind CSS</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">WebCrypto API</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">Neon DB</span>
+                <span class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 font-medium">Vercel</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 relative z-10 border-t border-white/10 bg-[#0a0a0a]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-6 md:mb-0 text-center md:text-left">
+                <div class="text-2xl font-bold tracking-tight mb-2">Fin<span class="text-finedge-green">Edge</span></div>
+                <p class="text-sm text-gray-500">Built for DPDP Act 2023 compliance.</p>
+                <p class="text-xs text-gray-600 mt-1">Final Year Project — AI-Powered Alternative Credit Scoring</p>
+            </div>
+            
+            <div class="flex flex-col items-center md:items-end">
+                <div class="flex space-x-6 mb-4">
+                    <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">API Docs</a>
+                </div>
+                <p class="text-xs text-gray-600">&copy; 2026 FinEdge. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts for animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navbar scroll effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 20) {
+                    navbar.classList.add('bg-black/40');
+                } else {
+                    navbar.classList.remove('bg-black/40');
+                }
+            });
+
+            // Intersection Observer for scroll reveal animations
+            const revealElements = document.querySelectorAll('.reveal');
+            
+            const revealCallback = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        // Optional: stop observing once revealed
+                        // observer.unobserve(entry.target);
+                    }
+                });
+            };
+            
+            const revealOptions = {
+                threshold: 0.1,
+                rootMargin: "0px 0px -50px 0px"
+            };
+            
+            const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
+            
+            revealElements.forEach(el => {
+                revealObserver.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
