@@ -513,7 +513,7 @@
                 <p class="text-gray-400 max-w-2xl mx-auto text-lg">Experience both sides of the FinEdge platform.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- User App Card -->
                 <div class="glass rounded-3xl p-8 flex flex-col items-center text-center reveal border border-finedge-green/20 hover:border-finedge-green/50 transition-colors">
                     <div class="w-20 h-20 bg-finedge-green/10 rounded-full flex items-center justify-center mb-6">
@@ -561,6 +561,31 @@
                     
                     <a href="./officer/" class="w-full glass bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-bold text-lg border border-white/20 transition-all block">
                         Open Dashboard &rarr;
+                    </a>
+                </div>
+
+                <!-- Developer Dashboard Card -->
+                <div class="glass rounded-3xl p-8 flex flex-col items-center text-center reveal delay-200 border border-purple-500/20 hover:border-purple-500/50 transition-colors">
+                    <div class="w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center mb-6">
+                        <svg class="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Developer Dashboard</h3>
+                    <p class="text-gray-400 mb-8 flex-grow">Access the developer portal to view API usage, monitor real-time event logs, and track billing revenue from SDK integrations.</p>
+                    
+                    <div class="w-full h-48 bg-black/40 rounded-xl border border-white/5 mb-8 p-4 flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                        <div class="text-xs text-green-400 font-mono text-left opacity-70">
+                            [200 OK] POST /v1/score/<br>
+                            Revenue: +₹10.00<br>
+                            [200 OK] GET /v1/status/<br>
+                            Revenue: --<br>
+                            [200 OK] POST /v1/decision/<br>
+                            Revenue: +₹10.00<br>
+                        </div>
+                    </div>
+                    
+                    <a href="https://finedge-iy0i.onrender.com/api/dashboard/admin/" target="_blank" class="w-full glass bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-bold text-lg border border-white/20 transition-all block">
+                        Open Dev Portal &rarr;
                     </a>
                 </div>
             </div>
