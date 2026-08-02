@@ -544,4 +544,30 @@ def trigger_decision(request: Request, application_id: str) -> Response:
         
     app.save()
     
-    return Response({"status": "success", "decision": decision})
+    return Response({"status": "success", "decision": decision})
+
+
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@csrf_exempt
+def reset_tenant_applications(request: Request, tenant_code: str) -> Response:
+    """
+    Clear all applications, trust scores, sdk sessions, and billing ledger entries for a tenant.
+    Allows officers to reset the demo state instantly.
+    """
+    try:
+        bank = Bank.objects.get(tenant_code=tenant_code)
+    except Bank.DoesNotExist:
+        return Response({"error": f"Bank with tenant code '{tenant_code}' not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    from .models import SdkSession
+    apps = LoanApplication.objects.filter(bank=bank)
+    app_count = apps.count()
+    apps.delete()
+
+    SdkSession.objects.filter(bank=bank).delete()
+    BillingLedger.objects.filter(bank=bank).delete()
+
+    logger.info("Reset %d applications for tenant: %s", app_count, tenant_code)
+    return Response({"status": "success", "deleted_applications": app_count})

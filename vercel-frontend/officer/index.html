@@ -109,6 +109,10 @@
                 <span class="text-xs font-medium text-brand uppercase tracking-wider">Live</span>
             </div>
             
+            <button onclick="resetDemoData()" class="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5">
+                <span>🔄</span> Reset Demo Data
+            </button>
+
             <div class="flex items-center space-x-2">
                 <span class="text-sm text-slate-300">Auto-refresh</span>
                 <label class="relative inline-flex items-center cursor-pointer">
@@ -276,6 +280,23 @@
                 cibilCheckedApps.add(appId);
                 fetchDashboardData();
             }, 1500);
+        }
+
+        async function resetDemoData() {
+            if (!confirm("Are you sure you want to erase all loan applications and reset to a clean state?")) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/reset/${TENANT_CODE}/`, { method: 'POST' });
+                if (res.ok) {
+                    localStorage.clear();
+                    cibilCheckedApps.clear();
+                    aaApprovedApps.clear();
+                    await fetchDashboardData();
+                } else {
+                    alert("Failed to reset demo data.");
+                }
+            } catch (e) {
+                alert("Network error resetting data: " + e.message);
+            }
         }
 
         function requestAA(appId, event) {

@@ -72,9 +72,14 @@
             <p class="text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Officer Dashboard · {{ bank.tenant_code }}</p>
           </div>
         </div>
-        <a href="{% url 'admin_dashboard' %}" class="text-[10px] text-slate-500 hover:text-fe-cyan font-semibold uppercase tracking-wider transition-colors">
-          ← Admin Panel
-        </a>
+        <div class="flex items-center gap-4">
+          <button onclick="resetTenantApplications()" class="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
+            <span>🔄</span> Reset Demo Applications
+          </button>
+          <a href="{% url 'admin_dashboard' %}" class="text-[10px] text-slate-500 hover:text-fe-cyan font-semibold uppercase tracking-wider transition-colors">
+            ← Admin Panel
+          </a>
+        </div>
       </div>
     </header>
 
@@ -433,6 +438,26 @@
             }
         } catch (e) {
             alert("Network error: " + e.message);
+        }
+      }
+
+      async function resetTenantApplications() {
+        if (!confirm("Are you sure you want to erase all applications and reset to a fresh state?")) return;
+        try {
+          const response = await fetch('/api/v1/reset/{{ bank.tenant_code }}/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}'
+            }
+          });
+          if (response.ok) {
+            localStorage.clear();
+            window.location.reload();
+          } else {
+            alert("Error resetting applications.");
+          }
+        } catch (e) {
+          alert("Network error: " + e.message);
         }
       }
 
