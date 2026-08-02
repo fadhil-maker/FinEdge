@@ -445,8 +445,13 @@ def officer_dashboard(request: HttpRequest, tenant_code: str) -> HttpResponse:
         trust = getattr(app, "trust_score", None)
 
         entry = {
-            "id": app.id,
+            "id": str(app.id),
             "tracking_reference": app.tracking_reference,
+            "applicant_name": getattr(app, "applicant_name", "Demo User"),
+            "applicant_phone": getattr(app, "applicant_phone", "+91 00000 00000"),
+            "requested_amount": app.requested_amount,
+            "cibil_score": getattr(app, "cibil_score", -1),
+            "aa_status": getattr(app, "aa_status", None),
             "current_step": app.get_current_step_display(),
             "current_step_raw": app.current_step,
             "created_at": app.created_at,
