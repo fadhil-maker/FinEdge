@@ -206,6 +206,18 @@
                     <span class="text-xs font-medium text-gray-600">Pay</span>
                 </button>
             </div>
+        <!-- Live Application Status Widget (Per Profile) -->
+        <div id="home-status-widget" class="px-6 mt-4 hidden">
+            <div onclick="navigateTo('processing-screen')" class="bg-gradient-to-r from-slate-900 to-navy-900 rounded-2xl p-4 text-white shadow-md border border-slate-700 cursor-pointer flex justify-between items-center">
+                <div>
+                    <span id="widget-status-badge" class="text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">Application Pending</span>
+                    <h4 class="font-bold text-sm mt-1">Loan Application #<span id="widget-app-id">...</span></h4>
+                    <p class="text-xs text-gray-400 mt-0.5">Tap to view live status & decision</p>
+                </div>
+                <div class="text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </div>
         </div>
 
         <!-- Banner -->
@@ -690,6 +702,13 @@
     };
     let currentProfile = 'good';
 
+    // Profile Application State
+    const profileAppsMap = {
+        good: null,
+        average: null,
+        bad: null
+    };
+
     function setProfile(type) {
         currentProfile = type;
         const p = demoProfiles[type];
@@ -699,6 +718,34 @@
         
         document.querySelectorAll('.profile-btn').forEach(btn => btn.classList.remove('ring-2', 'ring-white'));
         document.getElementById('profile-btn-' + type).classList.add('ring-2', 'ring-white');
+
+        updateWidget();
+    }
+
+    function updateWidget() {
+        const appInfo = profileAppsMap[currentProfile];
+        const widget = document.getElementById('home-status-widget');
+        if (appInfo) {
+            widget.classList.remove('hidden');
+            document.getElementById('widget-app-id').innerText = appInfo.appId.substring(0, 8);
+            const badge = document.getElementById('widget-status-badge');
+            
+            if (appInfo.status === 'DECISION_RENDERED' || appInfo.status === 'COMPLETED') {
+                badge.innerText = 'Loan Approved! ✅';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-0.5 rounded';
+            } else if (appInfo.status === 'REJECTED') {
+                badge.innerText = 'Application Rejected ❌';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.5 rounded';
+            } else if (appInfo.status === 'FALLBACK_REVIEW') {
+                badge.innerText = 'Under Review / Hold ⏳';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded';
+            } else {
+                badge.innerText = 'Pending Review ⏳';
+                badge.className = 'text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded';
+            }
+        } else {
+            widget.classList.add('hidden');
+        }
     }
 
     // Processing Flow
@@ -744,6 +791,9 @@
                 const data = await res.json();
                 const appId = data.application_id;
                 
+                profileAppsMap[currentProfile] = { appId: appId, status: 'PENDING' };
+                updateWidget();
+
                 // Show Waiting Card immediately
                 document.getElementById('terminal-container').style.display = 'none';
                 const waitCard = document.getElementById('waiting-card');
@@ -751,8 +801,8 @@
                 waitCard.classList.add('flex');
                 document.getElementById('wait-app-id').innerText = appId.substring(0, 13) + '...';
                 
-                // Start Polling
-                startPolling(appId);
+                // Start Global Polling
+                startGlobalPolling();
             } else if (res.status === 409) {
                 const errData = await res.json();
                 alert(`⚠️ ${errData.detail || "Active application already exists"}`);
@@ -766,29 +816,37 @@
         }
     }
 
-    let pollInterval;
-    function startPolling(appId) {
-        if(pollInterval) clearInterval(pollInterval);
+    let globalPollInterval;
+    function startGlobalPolling() {
+        if(globalPollInterval) return;
         
-        pollInterval = setInterval(async () => {
-            try {
-                const res = await fetch(`${API_BASE}/api/v1/application/${appId}/status/`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Api-Key ${API_KEY}`
-                    }
-                });
-                
-                if(res.status === 200) {
-                    const data = await res.json();
+        globalPollInterval = setInterval(async () => {
+            for (const profileKey in profileAppsMap) {
+                const appInfo = profileAppsMap[profileKey];
+                if (!appInfo || appInfo.status === 'COMPLETED' || appInfo.status === 'REJECTED' || appInfo.status === 'DECISION_RENDERED') continue;
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/v1/application/${appInfo.appId}/status/`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Api-Key ${API_KEY}`
+                        }
+                    });
                     
-                    if(data.status === 'DECISION_RENDERED' || data.status === 'REJECTED' || data.status === 'COMPLETED' || data.status === 'FALLBACK_REVIEW') {
-                        clearInterval(pollInterval);
-                        showResult(data);
+                    if(res.status === 200) {
+                        const data = await res.json();
+                        appInfo.status = data.status;
+                        
+                        if(profileKey === currentProfile) {
+                            updateWidget();
+                            if(data.status === 'DECISION_RENDERED' || data.status === 'REJECTED' || data.status === 'COMPLETED' || data.status === 'FALLBACK_REVIEW') {
+                                showResult(data);
+                            }
+                        }
                     }
+                } catch(e) {
+                    console.error("Polling error", e);
                 }
-            } catch(e) {
-                console.error("Polling error", e);
             }
         }, 3000);
     }
