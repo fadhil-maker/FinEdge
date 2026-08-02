@@ -310,26 +310,40 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
     - score_distribution     : Score band breakdown for charts.
     """
     # ── KPI Metrics ───────────────────────────────────────────────────────
-    total_revenue = (
-        BillingLedger.objects.aggregate(total=Sum("computed_charge"))["total"]
-        or Decimal("0.00")
-    )
+    try:
+        nexus_bank = Bank.objects.get(tenant_code="nexus")
+    except Bank.DoesNotExist:
+        nexus_bank = None
 
-    total_applications = LoanApplication.objects.count()
-    total_tenants = Bank.objects.filter(is_active=True).count()
+    if nexus_bank:
+        total_revenue = (
+            BillingLedger.objects.filter(bank=nexus_bank).aggregate(total=Sum("computed_charge"))["total"]
+            or Decimal("0.00")
+        )
+        total_applications = LoanApplication.objects.filter(bank=nexus_bank).count()
+        total_tenants = 1
 
-    from django.db.models import Avg
-    avg_score_result = TrustScoreResult.objects.aggregate(avg=Avg("calculated_score"))
-    avg_trust_score = int(avg_score_result["avg"] or 0)
+        from django.db.models import Avg
+        avg_score_result = TrustScoreResult.objects.filter(loan_application__bank=nexus_bank).aggregate(avg=Avg("calculated_score"))
+        avg_trust_score = int(avg_score_result["avg"] or 0)
 
-    thin_file_count = TrustScoreResult.objects.filter(is_thin_file=True).count()
-    fallback_count = LoanApplication.objects.filter(
-        current_step=LoanApplicationStep.FALLBACK_REVIEW,
-    ).count()
+        thin_file_count = TrustScoreResult.objects.filter(loan_application__bank=nexus_bank, is_thin_file=True).count()
+        fallback_count = LoanApplication.objects.filter(
+            bank=nexus_bank,
+            current_step=LoanApplicationStep.FALLBACK_REVIEW,
+        ).count()
+    else:
+        total_revenue = Decimal("0.00")
+        total_applications = 0
+        total_tenants = 0
+        avg_trust_score = 0
+        thin_file_count = 0
+        fallback_count = 0
 
     # ── Per-Tenant Volume Table ───────────────────────────────────────
     tenant_volumes = []
-    for b in Bank.objects.filter(is_active=True).order_by('name'):
+    if nexus_bank:
+        for b in [nexus_bank]:
         app_count = b.loan_applications.count()
         rev_agg = b.billing_entries.aggregate(total=Sum("computed_charge"))
         revenue = rev_agg["total"] or Decimal("0.00")
@@ -347,11 +361,14 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
     velocity_alerts = _detect_velocity_locks()
 
     # ── Recent Applications ───────────────────────────────────────────────
-    recent_applications = (
-        LoanApplication.objects
-        .select_related("bank", "trust_score")
-        .order_by("-created_at")[:20]
-    )
+    recent_applications = []
+    if nexus_bank:
+        recent_applications = (
+            LoanApplication.objects
+            .filter(bank=nexus_bank)
+            .select_related("bank", "trust_score")
+            .order_by("-created_at")[:20]
+        )
 
     # ── Score Distribution ────────────────────────────────────────────────
     score_bands = [
@@ -361,10 +378,14 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
         {"label": "750–900 (Excellent)", "min": 750, "max": 900, "color": "emerald"},
     ]
     for band in score_bands:
-        band["count"] = TrustScoreResult.objects.filter(
-            calculated_score__gte=band["min"],
-            calculated_score__lte=band["max"],
-        ).count()
+        if nexus_bank:
+            band["count"] = TrustScoreResult.objects.filter(
+                loan_application__bank=nexus_bank,
+                calculated_score__gte=band["min"],
+                calculated_score__lte=band["max"],
+            ).count()
+        else:
+            band["count"] = 0
 
     total_scored = sum(b["count"] for b in score_bands) or 1
     for band in score_bands:

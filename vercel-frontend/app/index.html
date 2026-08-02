@@ -396,20 +396,12 @@
     <div id="processing-screen" class="screen bg-navy-900 text-white">
         <div class="px-6 pt-16 flex flex-col items-center h-full">
             
-            <!-- Step 1: Terminal Output (hidden after done) -->
-            <div id="terminal-container" class="w-full bg-black rounded-xl p-4 mb-8 shadow-inner border border-gray-800 min-h-[200px]">
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span class="text-xs text-gray-500 ml-2 font-mono">Edge SDK v2.0</span>
-                </div>
-                <div id="terminal-output" class="terminal-text space-y-1">
-                    <!-- Logs appear here -->
-                </div>
+            <!-- Step 1: Terminal Output (Removed for standard app feel) -->
+            <div id="terminal-container" class="hidden">
+                <div id="terminal-output"></div>
             </div>
 
-            <!-- Step 2: Waiting Card (hidden initially) -->
+            <!-- Step 2: Waiting Card (shown initially upon submit) -->
             <div id="waiting-card" class="w-full bg-white/10 rounded-3xl p-6 backdrop-blur-md border border-white/20 hidden flex-col items-center text-center mt-10">
                 <div class="relative w-20 h-20 flex items-center justify-center mb-4 pulse-animation">
                     <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center relative z-10">
@@ -716,12 +708,6 @@
         
         const amount = parseInt(slider.value);
         
-        // Terminal UI simulation
-        await addTerminalLog('🔐 Initializing Edge SDK v2.0...', 300);
-        await addTerminalLog('📱 Collecting device fingerprint...', 600);
-        await addTerminalLog('🧠 Running behavioral analysis...', 700);
-        await addTerminalLog('📊 Computing mathematical vector...', 800);
-        
         // Generate Payload
         const p = demoProfiles[currentProfile];
         const vector = p.vector;
@@ -743,8 +729,6 @@
         const payloadStr = JSON.stringify(payloadObj);
         const signature = await signPayload(HMAC_SECRET, payloadStr);
 
-        await addTerminalLog('🌐 Submitting to FinEdge API...', 500);
-
         try {
             const res = await fetch(`${API_BASE}/api/v1/score/`, {
                 method: 'POST',
@@ -760,24 +744,22 @@
                 const data = await res.json();
                 const appId = data.application_id;
                 
-                await addTerminalLog('✅ Application submitted — waiting for officer review...', 500);
+                // Show Waiting Card immediately
+                document.getElementById('terminal-container').style.display = 'none';
+                const waitCard = document.getElementById('waiting-card');
+                waitCard.classList.remove('hidden');
+                waitCard.classList.add('flex');
+                document.getElementById('wait-app-id').innerText = appId.substring(0, 13) + '...';
                 
-                // Show Waiting Card
-                setTimeout(() => {
-                    document.getElementById('terminal-container').style.display = 'none';
-                    const waitCard = document.getElementById('waiting-card');
-                    waitCard.classList.remove('hidden');
-                    waitCard.classList.add('flex');
-                    document.getElementById('wait-app-id').innerText = appId.substring(0, 13) + '...';
-                    
-                    // Start Polling
-                    startPolling(appId);
-                }, 1500);
+                // Start Polling
+                startPolling(appId);
             } else if (res.status === 409) {
                 const errData = await res.json();
-                await addTerminalLog(`<span class="text-amber-500">⚠️ ${errData.detail || "Active application already exists"}</span>`, 500);
+                alert(`⚠️ ${errData.detail || "Active application already exists"}`);
+                navigateTo('home-screen');
             } else {
-                await addTerminalLog(`<span class="text-red-500">❌ Error: Server returned ${res.status}</span>`, 500);
+                alert(`❌ Error: Server returned ${res.status}`);
+                navigateTo('home-screen');
             }
         } catch(err) {
             await addTerminalLog(`<span class="text-red-500">❌ Connection Error: ${err.message}</span>`, 500);
@@ -800,7 +782,7 @@
                 if(res.status === 200) {
                     const data = await res.json();
                     
-                    if(data.status === 'DECISION_RENDERED' || data.status === 'REJECTED' || data.status === 'COMPLETED') {
+                    if(data.status === 'DECISION_RENDERED' || data.status === 'REJECTED' || data.status === 'COMPLETED' || data.status === 'FALLBACK_REVIEW') {
                         clearInterval(pollInterval);
                         showResult(data);
                     }
