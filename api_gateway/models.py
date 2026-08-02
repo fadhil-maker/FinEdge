@@ -308,6 +308,10 @@ class LoanApplication(UUIDBaseModel):
         max_digits=10, decimal_places=2, default=Decimal("2000.00"),
         help_text="Requested loan amount (defaulting to Mini Loan size)."
     )
+    tenure_months = models.IntegerField(
+        default=3,
+        help_text="Requested tenure in months."
+    )
     cibil_score = models.IntegerField(
         default=-1,
         help_text="Traditional CIBIL score (-1 means New to Credit)."

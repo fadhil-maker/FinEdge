@@ -304,6 +304,16 @@
                 const isScored = app.trust_score !== null;
                 const unscoredClass = !isScored ? 'border-brand/30 shadow-[0_0_15px_rgba(0,229,160,0.1)]' : 'border-slate-700/50';
                 
+                const tenure = app.tenure_months || 3;
+                let rate = 11.5;
+                if (tenure === 6) rate = 12.7;
+                if (tenure === 12) rate = 14.0;
+                
+                const timeInYears = tenure / 12;
+                const totalInterest = Math.round((app.requested_amount * rate * timeInYears) / 100);
+                const totalRepayable = app.requested_amount + totalInterest;
+                const monthlyEmi = Math.round(totalRepayable / tenure);
+
                 const card = document.createElement('div');
                 card.className = `glass-card rounded-xl border ${unscoredClass} overflow-hidden transition-all duration-300 hover:border-slate-500`;
                 
@@ -330,9 +340,19 @@
 
                         <!-- Center Section -->
                         <div class="flex-1 flex justify-start lg:justify-center items-center space-x-8">
-                            <div class="text-left lg:text-center">
-                                <p class="text-xs text-slate-400 mb-1">Requested Amount</p>
-                                <p class="text-lg font-bold text-white">${formatCurrency(app.requested_amount)}</p>
+                            <div class="flex items-center space-x-6">
+                                <div class="text-left">
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Principal</p>
+                                    <p class="text-sm font-bold text-white">${formatCurrency(app.requested_amount)}</p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Interest</p>
+                                    <p class="text-sm font-bold text-slate-300">${formatCurrency(totalInterest)}</p>
+                                </div>
+                                <div class="text-left bg-dark-900/50 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                                    <p class="text-[10px] text-brand uppercase tracking-wider mb-0.5">EMI (${tenure}M)</p>
+                                    <p class="text-base font-bold text-white">${formatCurrency(monthlyEmi)}</p>
+                                </div>
                             </div>
                             
                             ${isScored ? `
@@ -482,7 +502,26 @@
                     }
                     previousAppIds = currentAppIds;
                     
+                    // Store currently open panels
+                    const openPanels = [];
+                    document.querySelectorAll('.xai-panel').forEach(panel => {
+                        if (panel.classList.contains('open')) {
+                            openPanels.push(panel.id);
+                        }
+                    });
+                    
                     renderApplications(data.applications);
+                    
+                    // Restore open panels
+                    openPanels.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.classList.add('open');
+                            const appId = id.replace('xai-', '');
+                            const chevron = document.getElementById(`chevron-${appId}`);
+                            if (chevron) chevron.style.transform = 'rotate(180deg)';
+                        }
+                    });
                 }
 
                 document.getElementById('last-updated').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;

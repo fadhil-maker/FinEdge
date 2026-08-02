@@ -523,6 +523,7 @@ def officer_api_applications(request: HttpRequest, tenant_code: str) -> HttpResp
             "current_step_raw": app.current_step,
             "created_at": app.created_at.isoformat(),
             "requested_amount": float(app.requested_amount),
+            "tenure_months": app.tenure_months,
             "trust_score": trust.calculated_score if trust else None,
             "default_probability": trust.default_probability if trust else None,
             "is_thin_file": trust.is_thin_file if trust else False,

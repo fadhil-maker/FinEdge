@@ -440,13 +440,27 @@
                     <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
                         <div id="result-score-bar" class="bg-green-500 h-2 rounded-full" style="width: 82%"></div>
                     </div>
-                    <div class="flex justify-between text-[10px] text-gray-400">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-4">
                         <span>0</span>
                         <span>Poor</span>
                         <span>Fair</span>
                         <span>Good</span>
                         <span>Excellent</span>
                         <span>1000</span>
+                    </div>
+                    <div class="space-y-2 border-t border-gray-200 pt-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Principal</span>
+                            <span class="text-sm font-semibold text-gray-800" id="result-principal">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Interest</span>
+                            <span class="text-sm font-semibold text-gray-800" id="result-interest">₹0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Monthly EMI</span>
+                            <span class="text-sm font-bold text-blue-600" id="result-emi">₹0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -691,7 +705,8 @@
             device_hash_mask,
             tracking_reference,
             mathematical_vector: vector,
-            requested_amount: amount
+            requested_amount: amount,
+            tenure_months: currentMonths
         };
 
         const payloadStr = JSON.stringify(payloadObj);
@@ -789,6 +804,11 @@
         scoreEl.innerText = score;
         const percentage = Math.min(Math.max((score / 1000) * 100, 0), 100);
         scoreBarEl.style.width = percentage + '%';
+        
+        // Use calculations from current state
+        document.getElementById('result-principal').innerText = summaryPrincipal.innerText;
+        document.getElementById('result-interest').innerText = summaryInterest.innerText;
+        document.getElementById('result-emi').innerText = summaryEmi.innerText;
 
         if(score >= 650) {
             // Success
