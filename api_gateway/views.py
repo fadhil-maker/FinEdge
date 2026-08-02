@@ -352,6 +352,27 @@ class SubmitEdgeMetadataView(APIView):
 
         # ── 5. Get Requested Amount ──────────────────────────────────────────
         requested_amount = data.get("requested_amount", 2000.00)
+        applicant_phone = data.get("applicant_phone", "+91 00000 00000")
+
+        # ── 5b. Check for Existing Active Application ─────────────────────────
+        active_states = [
+            LoanApplicationStep.SDK_RECEIVED,
+            LoanApplicationStep.SCORE_COMPUTED,
+            LoanApplicationStep.FALLBACK_REVIEW,
+        ]
+        
+        if LoanApplication.objects.filter(
+            bank=bank, 
+            applicant_phone=applicant_phone, 
+            current_step__in=active_states
+        ).exists():
+            return Response(
+                {
+                    "error": "Duplicate Application",
+                    "detail": "An active loan application already exists for this user. The loan officer must process it first."
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
 
         # ── 6. Atomic Database Writes (Save Vector, Defer Score) ─────────────
         try:
@@ -370,7 +391,7 @@ class SubmitEdgeMetadataView(APIView):
                     current_step=LoanApplicationStep.SDK_RECEIVED,
                     requested_amount=requested_amount,
                     applicant_name=data.get("applicant_name", "Demo User"),
-                    applicant_phone=data.get("applicant_phone", "+91 00000 00000"),
+                    applicant_phone=applicant_phone,
                     tenure_months=data.get("tenure_months", 3),
                     cibil_score=-1, # Automatically -1 for New to Credit
                 )

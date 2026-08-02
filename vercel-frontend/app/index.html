@@ -773,6 +773,9 @@
                     // Start Polling
                     startPolling(appId);
                 }, 1500);
+            } else if (res.status === 409) {
+                const errData = await res.json();
+                await addTerminalLog(`<span class="text-amber-500">⚠️ ${errData.detail || "Active application already exists"}</span>`, 500);
             } else {
                 await addTerminalLog(`<span class="text-red-500">❌ Error: Server returned ${res.status}</span>`, 500);
             }
