@@ -235,7 +235,7 @@
         }
 
         function getStatusColor(statusRaw) {
-            switch(statusRaw) {
+            switch(statusRaw ? statusRaw.toUpperCase() : '') {
                 case 'SDK_RECEIVED': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
                 case 'SCORE_COMPUTED': return 'text-green-400 bg-green-500/10 border-green-500/20';
                 case 'FALLBACK_REVIEW': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
@@ -399,13 +399,13 @@
 
                         <!-- Right Section -->
                         <div class="flex-1 flex flex-col justify-end items-end space-y-2 w-full lg:w-auto mt-4 lg:mt-0">
-                            ${!isScored && app.current_step_raw === 'SDK_RECEIVED' ? `
+                            ${!isScored && app.current_step_raw.toUpperCase() === 'SDK_RECEIVED' ? `
                                 <button id="btn-${app.id}" onclick="triggerScore('${app.id}', event)" class="w-full lg:w-auto flex items-center justify-center px-4 py-2 bg-brand/10 hover:bg-brand/20 text-brand border border-brand/30 rounded-lg text-sm font-semibold transition-colors duration-200 shadow-[0_0_10px_rgba(0,229,160,0.1)]">
                                     Run FinEdge Score 🧠
                                 </button>
                             ` : ''}
                             
-                            ${isScored && app.current_step_raw === 'SCORE_COMPUTED' ? `
+                            ${isScored && app.current_step_raw.toUpperCase() === 'SCORE_COMPUTED' ? `
                                 <div class="flex space-x-2">
                                     <button onclick="triggerDecision('${app.id}', 'accept', event)" class="decision-btn-${app.id} px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded font-semibold text-sm transition-colors">Accept</button>
                                     <button onclick="triggerDecision('${app.id}', 'hold', event)" class="decision-btn-${app.id} px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded font-semibold text-sm transition-colors">Hold</button>
@@ -413,7 +413,7 @@
                                 </div>
                             ` : ''}
                             
-                            ${app.current_step_raw === 'DECISION_RENDERED' || app.current_step_raw === 'REJECTED' || app.current_step_raw === 'FALLBACK_REVIEW' ? `
+                            ${app.current_step_raw.toUpperCase() === 'DECISION_RENDERED' || app.current_step_raw.toUpperCase() === 'REJECTED' || app.current_step_raw.toUpperCase() === 'FALLBACK_REVIEW' ? `
                                 <div class="px-3 py-1 bg-slate-800 text-slate-300 rounded border border-slate-700 text-xs font-semibold">Decision Made</div>
                             ` : ''}
                             <div class="p-2 text-slate-400 hover:text-white transition-colors">
